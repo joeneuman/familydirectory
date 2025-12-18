@@ -79,6 +79,10 @@
                       </div>
                       <div class="flex-1">
                         <h4 class="font-semibold text-gray-900 mb-1">{{ event.name }}</h4>
+                        <!-- Show address if filter is on (full width) -->
+                        <div v-if="displayFilters.address && event.address" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                          {{ event.address }}
+                        </div>
                         <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                           <!-- Show birthday if it exists and filter allows -->
                           <div v-if="event.hasBirthday && displayFilters.birthday" class="flex items-center">
@@ -121,7 +125,7 @@
             <!-- Household Members - Head of household first, with bold name and address -->
             <!-- Box container around household -->
             <div class="border-t-4 border-l-4 border-r-4 border-gray-300">
-              <div class="space-y-3 px-3 pt-3">
+              <div class="space-y-3 px-3 pt-3 pb-3">
                 <template v-for="(person, personIndex) in getSortedHouseholdMembers(household.id)" :key="person.id">
                   <div
                     class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
@@ -189,7 +193,7 @@
             <!-- Box container around person without household -->
             <div class="mt-4">
               <div class="border-t-4 border-l-4 border-r-4 border-gray-300">
-                <div class="px-3 pt-3">
+                <div class="px-3 pt-3 pb-3">
                   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                   <router-link :to="`/person/${person.id}`" class="block">
                     <div class="flex items-start justify-between">
@@ -263,6 +267,10 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">
                       {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                     </h3>
+                    <!-- Show address if filter is on (full width) -->
+                    <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                      {{ getPersonAddress(person) }}
+                    </div>
                     <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                       <div v-if="displayFilters.generation && person.generation" class="flex items-center">
                         <span class="font-medium mr-1">Gen:</span> {{ person.generation }}
@@ -421,6 +429,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { parseISO, format } from 'date-fns';
+import { getApiBaseURL } from '../utils/api.js';
 
 const households = ref([]);
 const persons = ref([]);
@@ -497,7 +506,7 @@ const hasFilterChanges = computed(() => {
 async function saveAsDefault(event) {
   const viewKey = `directoryDisplayFilters_${currentViewType.value}`;
   try {
-    await axios.post(`/api/preferences/${viewKey}`, displayFilters.value);
+    await axios.post(`${getApiBaseURL()}/preferences/${viewKey}`, displayFilters.value);
     
     // Update loaded filters to match current
     loadedFilters.value = { ...displayFilters.value };
@@ -579,6 +588,7 @@ const scheduleView = computed(() => {
               phone: person.phone,
               photo_url: person.photo_url,
               years_married: null,
+              address: getPersonAddress(person),
             });
           }
         }
@@ -617,6 +627,7 @@ const scheduleView = computed(() => {
               phone: person.phone,
               photo_url: person.photo_url,
               years_married: yearsAtEvent,
+              address: getPersonAddress(person),
             });
           }
         }
@@ -639,6 +650,7 @@ const scheduleView = computed(() => {
         email: event.email,
         phone: event.phone,
         photo_url: event.photo_url,
+        address: event.address,
         hasBirthday: false,
         hasAnniversary: false,
         birthdayAge: null,
@@ -754,6 +766,12 @@ function getSortedHouseholdMembers(householdId) {
 }
 
 function getPersonAddress(person) {
+  // For non-head members, use household_address if available
+  if (person.household_address && !person.is_head_of_household) {
+    return person.household_address;
+  }
+  
+  // Otherwise use person's own address
   if (!person.address_line1 && !person.city && !person.state) return null;
   
   const parts = [];
@@ -944,8 +962,8 @@ const filteredPersons = computed(() => {
 async function fetchData() {
   try {
     const [householdsRes, personsRes] = await Promise.all([
-      axios.get('/api/households'),
-      axios.get('/api/persons'),
+      axios.get(`${getApiBaseURL()}/households`),
+      axios.get(`${getApiBaseURL()}/persons`),
     ]);
     households.value = householdsRes.data;
     persons.value = personsRes.data;

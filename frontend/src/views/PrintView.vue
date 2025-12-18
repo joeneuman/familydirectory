@@ -68,6 +68,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import { getApiBaseURL } from '../utils/api.js';
 
 const households = ref([]);
 const persons = ref([]);
@@ -93,8 +94,8 @@ const personsByGeneration = computed(() => {
 async function fetchData() {
   try {
     const [householdsRes, personsRes] = await Promise.all([
-      axios.get('/api/households'),
-      axios.get('/api/persons'),
+      axios.get(`${getApiBaseURL()}/households`),
+      axios.get(`${getApiBaseURL()}/persons`),
     ]);
     households.value = householdsRes.data;
     persons.value = personsRes.data;

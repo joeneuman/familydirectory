@@ -46,6 +46,7 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+import { getApiBaseURL } from '../utils/api.js';
 
 const email = ref('');
 const message = ref('');
@@ -57,7 +58,7 @@ async function handleSubmit() {
   message.value = '';
   
   try {
-    const response = await axios.post('/api/auth/request-link', {
+    const response = await axios.post(`${getApiBaseURL()}/auth/request-link`, {
       email: email.value,
     });
     message.value = response.data.message;

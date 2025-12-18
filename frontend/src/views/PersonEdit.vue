@@ -103,13 +103,25 @@
           <!-- Address -->
           <div>
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Address</h2>
+            <!-- Show household address if person is not head of household -->
+            <div v-if="person && !person.is_head_of_household && person.household_address" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p class="text-sm font-medium text-blue-900 mb-1">Household Address (from head of household):</p>
+              <p class="text-sm text-blue-700 whitespace-pre-line">{{ person.household_address }}</p>
+              <p class="text-xs text-blue-600 mt-2">Address fields below are read-only. Remove from household to edit address.</p>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-gray-700">Address Line 1</label>
                 <input
                   v-model="formData.address_line1"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
               <div class="sm:col-span-2">
@@ -117,7 +129,13 @@
                 <input
                   v-model="formData.address_line2"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
               <div>
@@ -125,7 +143,13 @@
                 <input
                   v-model="formData.city"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
               <div>
@@ -133,7 +157,13 @@
                 <input
                   v-model="formData.state"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
               <div>
@@ -141,7 +171,13 @@
                 <input
                   v-model="formData.postal_code"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
               <div>
@@ -149,7 +185,13 @@
                 <input
                   v-model="formData.country"
                   type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  :disabled="person && !person.is_head_of_household"
+                  :class="[
+                    'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
+                    person && !person.is_head_of_household 
+                      ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  ]"
                 />
               </div>
             </div>
@@ -332,6 +374,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { getApiBaseURL } from '../utils/api.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -403,7 +446,19 @@ async function handleSubmit() {
   error.value = null;
 
   try {
-    await axios.put(`/api/persons/${route.params.id}`, formData.value);
+    // If person is not head of household, don't send address fields
+    const dataToSend = { ...formData.value };
+    if (person.value && !person.value.is_head_of_household) {
+      // Remove address fields from the update
+      delete dataToSend.address_line1;
+      delete dataToSend.address_line2;
+      delete dataToSend.city;
+      delete dataToSend.state;
+      delete dataToSend.postal_code;
+      delete dataToSend.country;
+    }
+    
+    await axios.put(`${getApiBaseURL()}/persons/${route.params.id}`, dataToSend);
     router.push(`/person/${route.params.id}`);
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to save changes';
@@ -428,7 +483,7 @@ function hasOtherMembersInHousehold(targetPerson) {
 async function fetchAllPeople() {
   loadingPeople.value = true;
   try {
-    const response = await axios.get('/api/persons');
+    const response = await axios.get(`${getApiBaseURL()}/persons`);
     allPeople.value = response.data;
     // Pre-select the current person
     selectedHouseholdMembers.value = [person.value.id];
@@ -448,7 +503,7 @@ async function saveHousehold() {
       householdId = 'new';
     }
     
-    await axios.post(`/api/households/${householdId}/set-head`, {
+    await axios.post(`${getApiBaseURL()}/households/${householdId}/set-head`, {
       headPersonId: person.value.id,
       memberIds: selectedHouseholdMembers.value,
     });
@@ -471,7 +526,7 @@ async function removeFromHousehold() {
   }
 
   try {
-    await axios.post('/api/households/remove-member', {
+    await axios.post(`${getApiBaseURL()}/households/remove-member`, {
       personId: person.value.id,
     });
     await fetchPerson(); // Refresh person data

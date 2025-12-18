@@ -18,8 +18,35 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+// Allow CORS from localhost and common local network IPs
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://192.168.1.241:5173', // Add your local IP
+  /^http:\/\/192\.168\.\d+\.\d+:5173$/, // Allow any 192.168.x.x IP
+  /^http:\/\/10\.\d+\.\d+\.\d+:5173$/, // Allow any 10.x.x.x IP (common local network)
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches any allowed pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -50,8 +77,9 @@ setInterval(async () => {
   }
 }, 60 * 60 * 1000);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Accessible at http://localhost:${PORT} or http://192.168.1.241:${PORT}`);
 });
 

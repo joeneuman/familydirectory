@@ -284,15 +284,32 @@ router.post('/:id/set-head', async (req, res) => {
       primary_household_id: household.id,
     });
 
-    // Update all member household assignments
+    // Prepare address fields from head person to copy to members
+    const headAddressFields = {
+      address_line1: headPerson.address_line1 || null,
+      address_line2: headPerson.address_line2 || null,
+      city: headPerson.city || null,
+      state: headPerson.state || null,
+      postal_code: headPerson.postal_code || null,
+      country: headPerson.country || 'USA',
+    };
+
+    // Update all member household assignments and copy address from head
     if (memberIds && Array.isArray(memberIds)) {
       // Remove all selected members from their current households first
       for (const memberId of memberIds) {
+        // Skip the head person - they already have their address
+        if (memberId === headPersonId) {
+          continue;
+        }
+        
         // Check permission for each member
         const canEditMember = await canEdit(req.user.id, memberId);
         if (canEditMember) {
+          // Update household assignment and copy address from head
           await Person.update(memberId, {
             primary_household_id: household.id,
+            ...headAddressFields,
           });
         }
       }

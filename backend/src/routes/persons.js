@@ -1,5 +1,6 @@
 import express from 'express';
 import { Person } from '../models/Person.js';
+import { Household } from '../models/Household.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { canEdit } from '../utils/permissions.js';
 import { differenceInYears, parseISO } from 'date-fns';
@@ -15,14 +16,70 @@ router.get('/', async (req, res) => {
     const { search, sort } = req.query;
     let persons = await Person.findAll();
 
+    // Enrich persons with household information
+    const householdsMap = new Map();
+    for (const person of persons) {
+      if (person.primary_household_id && !householdsMap.has(person.primary_household_id)) {
+        const household = await Household.findById(person.primary_household_id);
+        if (household) {
+          householdsMap.set(person.primary_household_id, household);
+        }
+      }
+    }
+
+    // Add is_head_of_household and household_address to each person
+    const personsWithHouseholdInfo = await Promise.all(
+      persons.map(async (person) => {
+        let isHeadOfHousehold = false;
+        let householdAddress = null;
+
+        if (person.primary_household_id) {
+          const household = householdsMap.get(person.primary_household_id);
+          if (household) {
+            if (household.primary_contact_person_id) {
+              isHeadOfHousehold = household.primary_contact_person_id === person.id;
+            } else {
+              // If no explicit primary contact, check if person is the only member
+              const members = await Person.findByHousehold(person.primary_household_id);
+              isHeadOfHousehold = members.length === 1;
+            }
+
+            // Get household address if person is not the head
+            if (!isHeadOfHousehold) {
+              const members = await Person.findByHousehold(person.primary_household_id);
+              let headMember = null;
+              if (household.primary_contact_person_id) {
+                headMember = members.find(m => m.id === household.primary_contact_person_id);
+              }
+              const addressSource = headMember || members.find(m => m.address_line1 || m.city || m.state) || members[0];
+              if (addressSource) {
+                householdAddress = getHouseholdAddress([addressSource]);
+              }
+            }
+          }
+        } else {
+          // Person without household is automatically head of their own household
+          isHeadOfHousehold = true;
+        }
+
+        return {
+          ...person,
+          is_head_of_household: isHeadOfHousehold,
+          household_address: householdAddress,
+        };
+      })
+    );
+
     // Search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      persons = persons.filter(p => {
+      persons = personsWithHouseholdInfo.filter(p => {
         const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
         return fullName.includes(searchLower) || 
                (p.email && p.email.toLowerCase().includes(searchLower));
       });
+    } else {
+      persons = personsWithHouseholdInfo;
     }
 
     // Sort options
@@ -91,6 +148,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Helper function to get household address from members
+function getHouseholdAddress(members) {
+  // Prefer address from head of household, or any member with address
+  const memberWithAddress = members.find(m => 
+    m.address_line1 || m.city || m.state
+  );
+  
+  if (!memberWithAddress) return null;
+
+  const parts = [];
+  if (memberWithAddress.address_line1) parts.push(memberWithAddress.address_line1);
+  if (memberWithAddress.address_line2) parts.push(memberWithAddress.address_line2);
+  if (memberWithAddress.city || memberWithAddress.state || memberWithAddress.postal_code) {
+    const cityStateZip = [
+      memberWithAddress.city,
+      memberWithAddress.state,
+      memberWithAddress.postal_code
+    ].filter(Boolean).join(', ');
+    if (cityStateZip) parts.push(cityStateZip);
+  }
+  if (memberWithAddress.country && memberWithAddress.country !== 'USA') {
+    parts.push(memberWithAddress.country);
+  }
+
+  return parts.length > 0 ? parts.join('\n') : null;
+}
+
 // Get single person with relationships
 router.get('/:id', async (req, res) => {
   try {
@@ -107,12 +191,50 @@ router.get('/:id', async (req, res) => {
     // Check edit permission
     const hasEditPermission = await canEdit(req.user.id, person.id);
 
+    // Determine if person is head of household and get household address
+    let isHeadOfHousehold = false;
+    let householdAddress = null;
+    
+    if (person.primary_household_id) {
+      const household = await Household.findById(person.primary_household_id);
+      if (household) {
+        // Check if person is the primary contact (explicit head)
+        if (household.primary_contact_person_id) {
+          isHeadOfHousehold = household.primary_contact_person_id === person.id;
+        } else {
+          // If no explicit primary contact, check if person is the only member
+          const members = await Person.findByHousehold(person.primary_household_id);
+          isHeadOfHousehold = members.length === 1;
+        }
+        
+        // Get household address (from head of household) if person is not the head
+        if (!isHeadOfHousehold) {
+          const members = await Person.findByHousehold(person.primary_household_id);
+          // Find the head of household to get their address
+          let headMember = null;
+          if (household.primary_contact_person_id) {
+            headMember = members.find(m => m.id === household.primary_contact_person_id);
+          }
+          // Get address from head if available, otherwise from any member with address
+          const addressSource = headMember || members.find(m => m.address_line1 || m.city || m.state) || members[0];
+          if (addressSource) {
+            householdAddress = getHouseholdAddress([addressSource]);
+          }
+        }
+      }
+    } else {
+      // Person without household is automatically head of their own household
+      isHeadOfHousehold = true;
+    }
+
     res.json({
       ...person,
       spouse,
       parents,
       children,
       canEdit: hasEditPermission,
+      is_head_of_household: isHeadOfHousehold,
+      household_address: householdAddress,
     });
   } catch (error) {
     console.error('Error fetching person:', error);
@@ -129,6 +251,38 @@ router.put('/:id', async (req, res) => {
     const hasPermission = await canEdit(req.user.id, personId);
     if (!hasPermission) {
       return res.status(403).json({ error: 'You do not have permission to edit this person' });
+    }
+
+    // Get current person to check if they're head of household
+    const currentPerson = await Person.findById(personId);
+    if (!currentPerson) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    // If person is not head of household, prevent address updates
+    let isHeadOfHousehold = false;
+    if (currentPerson.primary_household_id) {
+      const household = await Household.findById(currentPerson.primary_household_id);
+      if (household) {
+        if (household.primary_contact_person_id) {
+          isHeadOfHousehold = household.primary_contact_person_id === personId;
+        } else {
+          const members = await Person.findByHousehold(currentPerson.primary_household_id);
+          isHeadOfHousehold = members.length === 1;
+        }
+      }
+    } else {
+      isHeadOfHousehold = true; // Person without household is head
+    }
+
+    // Remove address fields if person is not head of household
+    if (!isHeadOfHousehold) {
+      delete req.body.address_line1;
+      delete req.body.address_line2;
+      delete req.body.city;
+      delete req.body.state;
+      delete req.body.postal_code;
+      delete req.body.country;
     }
 
     // Calculate age if date_of_birth is provided

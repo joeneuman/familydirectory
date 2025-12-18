@@ -208,6 +208,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { differenceInYears, parseISO } from 'date-fns';
 import { useAuthStore } from '../stores/auth';
+import { getApiBaseURL } from '../utils/api.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -275,13 +276,13 @@ async function handleSubmit() {
     }
 
     // Create the person first
-    const response = await axios.post('/api/persons', formData.value);
+    const response = await axios.post(`${getApiBaseURL()}/persons`, formData.value);
     const newPersonId = response.data.id;
 
     // If head of household is checked, create household and set as head
     if (isHeadOfHousehold.value) {
       try {
-        await axios.post('/api/households/new/set-head', {
+        await axios.post(`${getApiBaseURL()}/households/new/set-head`, {
           headPersonId: newPersonId,
           memberIds: [newPersonId], // Just the head for now
         });

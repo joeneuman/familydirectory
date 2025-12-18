@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { getApiBaseURL } from '../utils/api.js';
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('auth_token') || null);
@@ -35,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchCurrentUser() {
     try {
-      const response = await axios.get('/api/persons/me/info');
+      const response = await axios.get(`${getApiBaseURL()}/persons/me/info`);
       setUser(response.data);
       return response.data;
     } catch (error) {
