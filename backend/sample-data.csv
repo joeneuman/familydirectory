@@ -1,0 +1,9 @@
+first_name,last_name,email,phone,address_line1,address_line2,city,state,postal_code,country,date_of_birth,wedding_anniversary_date,generation,household_name,mother_name,father_name,spouse_name,is_deceased,photo_url
+Jane,Smith,jane.smith@example.com,555-0100,123 Main St,,Springfield,IL,62701,USA,1950-01-15,1970-06-20,G1,Smith Household,,,,false,
+John,Smith,john.smith@example.com,555-0101,123 Main St,,Springfield,IL,62701,USA,1948-03-10,1970-06-20,G1,Smith Household,,,Jane Smith,false,
+Alice,Smith,alice.smith@example.com,555-0200,456 Oak Ave,,Chicago,IL,60601,USA,1975-05-12,2000-08-15,G2,Smith-Doe Household,Jane Smith,John Smith,Bob Doe,false,
+Bob,Doe,bob.doe@example.com,555-0201,456 Oak Ave,,Chicago,IL,60601,USA,1973-07-22,2000-08-15,G2,Smith-Doe Household,,,Alice Smith,false,
+Charlie,Doe,charlie.doe@example.com,555-0300,456 Oak Ave,,Chicago,IL,60601,USA,2005-11-30,,G3,Smith-Doe Household,Alice Smith,Bob Doe,,false,
+Emma,Doe,emma.doe@example.com,555-0301,456 Oak Ave,,Chicago,IL,60601,USA,2008-04-18,,G3,Smith-Doe Household,Alice Smith,Bob Doe,,false,
+
+
