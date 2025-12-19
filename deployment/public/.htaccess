@@ -1,0 +1,13 @@
+# API Proxy
+RewriteEngine On
+
+# Proxy API requests to Node.js backend
+RewriteCond %{REQUEST_URI} ^/api
+RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+
+# Serve static files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# SPA routing - serve index.html for all non-API routes
+RewriteRule ^(?!api).*$ /index.html [L]

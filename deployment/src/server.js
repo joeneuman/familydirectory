@@ -2,13 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import householdsRoutes from './routes/households.js';
 import personsRoutes from './routes/persons.js';
 import preferencesRoutes from './routes/preferences.js';
-import uploadRoutes from './routes/upload.js';
 import { MagicLinkToken } from './models/MagicLinkToken.js';
 
 dotenv.config();
@@ -59,19 +57,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
-// Ensure upload directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+if (process.env.UPLOAD_DIR) {
+  app.use('/uploads', express.static(path.join(__dirname, '..', process.env.UPLOAD_DIR)));
 }
-app.use('/uploads', express.static(uploadDir));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/households', householdsRoutes);
 app.use('/api/persons', personsRoutes);
 app.use('/api/preferences', preferencesRoutes);
-app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -80,11 +74,7 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {
-  // Check for production path (public/) first, then development path (frontend/dist)
-  const publicPath = path.join(__dirname, '..', 'public');
-  const devPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
-  const frontendPath = fs.existsSync(publicPath) ? publicPath : devPath;
-  
+  const frontendPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
   app.use(express.static(frontendPath));
   
   // Serve index.html for all non-API routes (SPA routing)

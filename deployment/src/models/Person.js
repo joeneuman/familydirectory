@@ -158,15 +158,5 @@ export class Person {
     );
     return result.rows;
   }
-
-  static async delete(personId) {
-    // Delete relationships first (cascade should handle this, but being explicit)
-    await pool.query('DELETE FROM relationships WHERE parent_id = $1 OR child_id = $1', [personId]);
-    await pool.query('DELETE FROM marital_relationships WHERE person_a_id = $1 OR person_b_id = $1', [personId]);
-    
-    // Delete the person
-    const result = await pool.query('DELETE FROM persons WHERE id = $1 RETURNING *', [personId]);
-    return result.rows[0];
-  }
 }
 

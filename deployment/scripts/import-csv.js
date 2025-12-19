@@ -29,16 +29,12 @@ const __dirname = path.dirname(__filename);
  * - date_of_birth (YYYY-MM-DD format, optional)
  * - wedding_anniversary_date (YYYY-MM-DD format, optional)
  * - generation (G1, G2, G3, etc.)
+ * - household_name
  * - mother_name (first_name last_name, optional)
  * - father_name (first_name last_name, optional)
  * - spouse_name (first_name last_name, optional)
  * - is_deceased (true/false, optional)
- * - is_admin (true/false, optional) - Set to "true" to make this person an administrator
  * - photo_url (optional)
- * 
- * Note: People are imported without households. The existing system automatically
- * treats people without households as heads of their own household. Households can
- * be manually assigned/merged later through the UI.
  */
 
 async function importCSV(filePath) {
@@ -59,20 +55,28 @@ async function importCSV(filePath) {
 
     // Create maps for lookups
     const personMap = new Map(); // name -> person object
+    const householdMap = new Map(); // household_name -> household object
 
-    // First pass: Create persons (no households - they will be manually assigned later)
+    // First pass: Create households and persons
     for (const record of records) {
+      // Create or get household
+      let household = householdMap.get(record.household_name);
+      if (!household && record.household_name) {
+        household = await Household.create({
+          name: record.household_name,
+        });
+        householdMap.set(record.household_name, household);
+        console.log(`Created household: ${household.name}`);
+      }
 
       // Calculate age and years_married
       let age = null;
       if (record.date_of_birth) {
         try {
           const dob = parseISO(record.date_of_birth);
-          const calculatedAge = differenceInYears(new Date(), dob);
-          age = isNaN(calculatedAge) ? null : calculatedAge;
+          age = differenceInYears(new Date(), dob);
         } catch (e) {
           console.warn(`Invalid date_of_birth for ${record.first_name} ${record.last_name}: ${record.date_of_birth}`);
-          age = null;
         }
       }
 
@@ -80,15 +84,13 @@ async function importCSV(filePath) {
       if (record.wedding_anniversary_date) {
         try {
           const annDate = parseISO(record.wedding_anniversary_date);
-          const calculatedYears = differenceInYears(new Date(), annDate);
-          years_married = isNaN(calculatedYears) ? null : calculatedYears;
+          years_married = differenceInYears(new Date(), annDate);
         } catch (e) {
           console.warn(`Invalid wedding_anniversary_date for ${record.first_name} ${record.last_name}: ${record.wedding_anniversary_date}`);
-          years_married = null;
         }
       }
 
-      // Create person (no household - existing system will treat them as head of their own household)
+      // Create person
       const person = await Person.create({
         first_name: record.first_name,
         last_name: record.last_name,
@@ -108,8 +110,7 @@ async function importCSV(filePath) {
         generation: record.generation || null,
         photo_url: record.photo_url || null,
         is_deceased: record.is_deceased === 'true' || record.is_deceased === true,
-        is_admin: record.is_admin === 'true' || record.is_admin === true,
-        primary_household_id: null, // No household - system will treat them as head of their own household
+        primary_household_id: household?.id || null,
       });
 
       // Store in map for relationship lookup
@@ -191,9 +192,17 @@ async function importCSV(filePath) {
       }
     }
 
-    // Note: People are imported without households
-    // The existing system automatically treats people without households as heads of their own household
-    // Households can be manually assigned later through the UI
+    // Update household primary contacts (first adult in each household)
+    for (const [householdName, household] of householdMap.entries()) {
+      const members = await Person.findByHousehold(household.id);
+      if (members.length > 0) {
+        // Find first non-deceased adult (or just first person)
+        const primaryContact = members.find(m => !m.is_deceased) || members[0];
+        await Household.update(household.id, {
+          primary_contact_person_id: primaryContact.id,
+        });
+      }
+    }
 
     await client.query('COMMIT');
     console.log('Import completed successfully!');

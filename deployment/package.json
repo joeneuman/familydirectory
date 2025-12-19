@@ -1,19 +1,18 @@
 {
-  "name": "family-directory-backend",
+  "name": "family-directory",
   "version": "1.0.0",
-  "description": "Backend API for family directory",
+  "description": "Family Directory Application",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
     "migrate": "node migrations/run-migrations.js",
     "export:db": "node scripts/export-database-sql.js",
     "export:db:with-data": "node scripts/export-database-sql.js --with-data"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "pg": "^8.11.3",
@@ -31,4 +30,3 @@
     "nodemon": "^3.0.2"
   }
 }
-

@@ -169,14 +169,36 @@
         <div>
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Photo</h2>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Photo URL</label>
+            <!-- Current photo preview -->
+            <div v-if="formData.photo_url" class="mb-4">
+              <img 
+                :src="getPhotoURL(formData.photo_url)" 
+                alt="Photo preview" 
+                class="w-32 h-32 object-cover rounded-lg border border-gray-300"
+              />
+              <button
+                type="button"
+                @click="formData.photo_url = ''"
+                class="mt-2 text-sm text-red-600 hover:text-red-800"
+              >
+                Remove photo
+              </button>
+            </div>
+            
+            <!-- File upload -->
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photo</label>
             <input
-              v-model="formData.photo_url"
-              type="url"
-              placeholder="https://..."
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              @change="handlePhotoUpload"
+              class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
             />
-            <p class="mt-1 text-sm text-gray-500">Enter a URL to a photo</p>
+            <p class="mt-1 text-sm text-gray-500">Upload a photo (JPEG, PNG, GIF, or WebP, max 5MB)</p>
+            
+            <!-- Upload progress -->
+            <div v-if="uploading" class="mt-2 text-sm text-gray-600">
+              Uploading...
+            </div>
           </div>
         </div>
 
@@ -208,13 +230,14 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { differenceInYears, parseISO } from 'date-fns';
 import { useAuthStore } from '../stores/auth';
-import { getApiBaseURL } from '../utils/api.js';
+import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const saving = ref(false);
 const error = ref(null);
 const isHeadOfHousehold = ref(false);
+const uploading = ref(false);
 
 const formData = ref({
   first_name: '',
@@ -249,6 +272,46 @@ onMounted(async () => {
     }, 2000);
   }
 });
+
+async function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = 'File size must be less than 5MB';
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Only image files are allowed (JPEG, PNG, GIF, WebP)';
+    return;
+  }
+
+  uploading.value = true;
+  error.value = null;
+
+  try {
+    const uploadFormData = new FormData();
+    uploadFormData.append('photo', file);
+
+    const response = await axios.post(`${getApiBaseURL()}/upload/photo`, uploadFormData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Update the photo_url with the returned path
+    formData.value.photo_url = response.data.photo_url;
+  } catch (err) {
+    console.error('Error uploading photo:', err);
+    error.value = err.response?.data?.error || 'Failed to upload photo';
+  } finally {
+    uploading.value = false;
+  }
+}
 
 async function handleSubmit() {
   saving.value = true;

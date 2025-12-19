@@ -62,54 +62,8 @@ router.get('/', async (req, res) => {
           isHeadOfHousehold = true;
         }
 
-        // Calculate age if missing but date_of_birth exists
-        let calculatedAge = person.age;
-        if ((!calculatedAge || calculatedAge === null) && person.date_of_birth) {
-          try {
-            // Handle both Date objects (from PostgreSQL) and ISO strings
-            let dob;
-            if (person.date_of_birth instanceof Date) {
-              dob = person.date_of_birth;
-            } else {
-              dob = parseISO(person.date_of_birth);
-            }
-            calculatedAge = differenceInYears(new Date(), dob);
-            // Ensure it's a valid number
-            if (isNaN(calculatedAge)) {
-              calculatedAge = person.age;
-            }
-          } catch (e) {
-            // Invalid date, keep age as null
-            calculatedAge = person.age;
-          }
-        }
-
-        // Calculate years_married if missing but wedding_anniversary_date exists
-        let calculatedYearsMarried = person.years_married;
-        if ((!calculatedYearsMarried || calculatedYearsMarried === null) && person.wedding_anniversary_date) {
-          try {
-            // Handle both Date objects (from PostgreSQL) and ISO strings
-            let annDate;
-            if (person.wedding_anniversary_date instanceof Date) {
-              annDate = person.wedding_anniversary_date;
-            } else {
-              annDate = parseISO(person.wedding_anniversary_date);
-            }
-            calculatedYearsMarried = differenceInYears(new Date(), annDate);
-            // Ensure it's a valid number
-            if (isNaN(calculatedYearsMarried)) {
-              calculatedYearsMarried = person.years_married;
-            }
-          } catch (e) {
-            // Invalid date, keep years_married as null
-            calculatedYearsMarried = person.years_married;
-          }
-        }
-
         return {
           ...person,
-          age: calculatedAge,
-          years_married: calculatedYearsMarried,
           is_head_of_household: isHeadOfHousehold,
           household_address: householdAddress,
         };
@@ -273,54 +227,8 @@ router.get('/:id', async (req, res) => {
       isHeadOfHousehold = true;
     }
 
-    // Calculate age if missing but date_of_birth exists
-    let calculatedAge = person.age;
-    if ((!calculatedAge || calculatedAge === null) && person.date_of_birth) {
-      try {
-        // Handle both Date objects (from PostgreSQL) and ISO strings
-        let dob;
-        if (person.date_of_birth instanceof Date) {
-          dob = person.date_of_birth;
-        } else {
-          dob = parseISO(person.date_of_birth);
-        }
-        calculatedAge = differenceInYears(new Date(), dob);
-        // Ensure it's a valid number
-        if (isNaN(calculatedAge)) {
-          calculatedAge = person.age;
-        }
-      } catch (e) {
-        // Invalid date, keep age as null
-        calculatedAge = person.age;
-      }
-    }
-
-    // Calculate years_married if missing but wedding_anniversary_date exists
-    let calculatedYearsMarried = person.years_married;
-    if ((!calculatedYearsMarried || calculatedYearsMarried === null) && person.wedding_anniversary_date) {
-      try {
-        // Handle both Date objects (from PostgreSQL) and ISO strings
-        let annDate;
-        if (person.wedding_anniversary_date instanceof Date) {
-          annDate = person.wedding_anniversary_date;
-        } else {
-          annDate = parseISO(person.wedding_anniversary_date);
-        }
-        calculatedYearsMarried = differenceInYears(new Date(), annDate);
-        // Ensure it's a valid number
-        if (isNaN(calculatedYearsMarried)) {
-          calculatedYearsMarried = person.years_married;
-        }
-      } catch (e) {
-        // Invalid date, keep years_married as null
-        calculatedYearsMarried = person.years_married;
-      }
-    }
-
     res.json({
       ...person,
-      age: calculatedAge,
-      years_married: calculatedYearsMarried,
       spouse,
       parents,
       children,
@@ -409,32 +317,6 @@ router.get('/me/info', async (req, res) => {
     res.json(person);
   } catch (error) {
     console.error('Error fetching current user:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Delete person (admin only)
-router.delete('/:id', async (req, res) => {
-  try {
-    // Check if user is admin
-    const currentUser = await Person.findById(req.user.id);
-    if (!currentUser || !currentUser.is_admin) {
-      return res.status(403).json({ error: 'Only administrators can delete contacts' });
-    }
-
-    const personId = req.params.id;
-    const person = await Person.findById(personId);
-    
-    if (!person) {
-      return res.status(404).json({ error: 'Person not found' });
-    }
-
-    // Delete person (cascade will handle relationships)
-    await Person.delete(personId);
-    
-    res.json({ success: true, message: 'Person deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting person:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

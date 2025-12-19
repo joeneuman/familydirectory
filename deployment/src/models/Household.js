@@ -7,8 +7,8 @@ export class Household {
               p.first_name as primary_contact_first_name,
               p.last_name as primary_contact_last_name
        FROM households h
-       LEFT JOIN persons p ON h.primary_contact_person_id = p.id`
-      // No ORDER BY - let frontend handle sorting
+       LEFT JOIN persons p ON h.primary_contact_person_id = p.id
+       ORDER BY h.name`
     );
     return result.rows;
   }

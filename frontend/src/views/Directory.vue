@@ -7,7 +7,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by name or email..."
+            placeholder="Search by name, email, or phone..."
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
@@ -75,7 +75,7 @@
                     <div class="flex-1 flex items-start gap-3">
                       <!-- Photo -->
                       <div v-if="displayFilters.photo && event.photo_url" class="flex-shrink-0">
-                        <img :src="event.photo_url" :alt="event.name" class="w-12 h-12 rounded-full object-cover" />
+                        <img :src="getPhotoURL(event.photo_url)" :alt="event.name" class="w-12 h-12 rounded-full object-cover" />
                       </div>
                       <div class="flex-1">
                         <h4 class="font-semibold text-gray-900 mb-1">{{ event.name }}</h4>
@@ -135,11 +135,11 @@
                     <div class="flex-1 flex items-start gap-3">
                       <!-- Photo -->
                       <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                        <img :src="person.photo_url" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                        <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                       </div>
                       <div class="flex-1">
                         <!-- Bold name if head of household -->
-                        <h3 :class="isHeadOfHousehold(household.id, person.id) ? 'text-lg font-bold text-gray-900 mb-1' : 'text-lg font-semibold text-gray-900 mb-1'">
+                        <h3 :class="isHeadOfHousehold(household.id, person.id) ? 'text-lg font-extrabold text-gray-900 mb-1' : 'text-lg font-semibold text-gray-900 mb-1'">
                           {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                         </h3>
                         <!-- Show address only for head of household (full width) -->
@@ -159,6 +159,9 @@
                           </div>
                           <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
                             <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
+                          </div>
+                          <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
+                            <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
                           </div>
                           <div v-if="displayFilters.email && person.email" class="flex items-center">
                             <span class="font-medium mr-1">Email:</span> {{ person.email }}
@@ -200,11 +203,11 @@
                       <div class="flex-1 flex items-start gap-3">
                         <!-- Photo -->
                         <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                          <img :src="person.photo_url" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                          <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                         </div>
                         <div class="flex-1">
                           <!-- Bold name (they're their own head) -->
-                          <h3 class="text-lg font-bold text-gray-900 mb-1">
+                          <h3 class="text-lg font-extrabold text-gray-900 mb-1">
                             {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                           </h3>
                           <!-- Show address if they have one (full width) -->
@@ -224,6 +227,9 @@
                             </div>
                             <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
                               <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
+                            </div>
+                            <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
+                              <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
                             </div>
                             <div v-if="displayFilters.email && person.email" class="flex items-center">
                               <span class="font-medium mr-1">Email:</span> {{ person.email }}
@@ -261,7 +267,7 @@
                 <div class="flex-1 flex items-start gap-3">
                   <!-- Photo -->
                   <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                    <img :src="person.photo_url" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                    <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                   </div>
                   <div class="flex-1">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">
@@ -283,6 +289,9 @@
                       </div>
                       <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
                         <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
+                      </div>
+                      <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
+                        <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
                       </div>
                       <div v-if="displayFilters.email && person.email" class="flex items-center">
                         <span class="font-medium mr-1">Email:</span> {{ person.email }}
@@ -393,6 +402,15 @@
           </div>
           <div class="flex items-center">
             <input
+              id="filter-years-married"
+              type="checkbox"
+              v-model="displayFilters.years_married"
+              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label for="filter-years-married" class="ml-3 text-sm font-medium text-gray-700">Years Married</label>
+          </div>
+          <div class="flex items-center">
+            <input
               id="filter-location"
               type="checkbox"
               v-model="displayFilters.location"
@@ -429,7 +447,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { parseISO, format } from 'date-fns';
-import { getApiBaseURL } from '../utils/api.js';
+import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 const households = ref([]);
 const persons = ref([]);
@@ -448,6 +466,7 @@ const defaultDisplayFilters = {
   age: true,
   birthday: true,
   anniversary: true,
+  years_married: false,
   location: true,
 };
 
@@ -534,7 +553,7 @@ async function saveAsDefault(event) {
 function formatDateShort(dateString) {
   if (!dateString) return null;
   try {
-    return format(parseISO(dateString), 'MMM d');
+    return format(parseISO(dateString), 'MMM d, yy');
   } catch {
     return dateString;
   }
@@ -700,14 +719,23 @@ function getHouseholdMembers(householdId) {
 }
 
 function getHeadOfHousehold(householdId) {
-  const household = households.value.find(h => h.id === householdId);
-  if (!household) return null;
+  const members = getHouseholdMembers(householdId);
+  if (members.length === 0) return null;
   
-  // Use the display_name from backend to extract the head's name
-  // Backend format: "Jane Smith Household" -> extract "Jane Smith"
-  if (household.display_name) {
+  // First, try to use primary_contact_person_id from household object
+  const household = households.value.find(h => h.id === householdId);
+  if (household && household.primary_contact_person_id) {
+    const headById = members.find(m => m.id === household.primary_contact_person_id);
+    if (headById) return headById;
+  }
+  
+  // Second, try to find the head using is_head_of_household flag from backend
+  const headByFlag = members.find(m => m.is_head_of_household);
+  if (headByFlag) return headByFlag;
+  
+  // Fallback: Use the display_name from backend to extract the head's name
+  if (household && household.display_name) {
     const displayName = household.display_name.replace(' Household', '');
-    const members = getHouseholdMembers(householdId);
     const head = members.find(m => {
       const fullName = m.full_name || `${m.first_name} ${m.last_name}`;
       return fullName === displayName;
@@ -715,11 +743,7 @@ function getHeadOfHousehold(householdId) {
     if (head) return head;
   }
   
-  // Fallback: Find the oldest blood relative (lowest generation, then oldest age)
-  const members = getHouseholdMembers(householdId);
-  if (members.length === 0) return null;
-  
-  // Filter to those with generation (blood relatives)
+  // Final fallback: Find the oldest blood relative (lowest generation, then oldest age)
   const withGeneration = members.filter(m => m.generation);
   if (withGeneration.length === 0) {
     // If no one has generation, use oldest person
@@ -796,6 +820,11 @@ function getPersonAddress(person) {
 const householdsWithMembers = computed(() => {
   if (sortBy.value !== 'household') return [];
   
+  // Ensure we have data before processing
+  if (!households.value || !persons.value || households.value.length === 0 || persons.value.length === 0) {
+    return [];
+  }
+  
   let validHouseholds = households.value.filter(household => {
     const members = persons.value.filter(p => p.primary_household_id === household.id);
     return members.length > 0;
@@ -810,13 +839,15 @@ const householdsWithMembers = computed(() => {
       return members.some(p => {
         const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
         const email = (p.email || '').toLowerCase();
-        return fullName.includes(query) || email.includes(query);
+        const phone = (p.phone || '').toLowerCase();
+        return fullName.includes(query) || email.includes(query) || phone.includes(query);
       });
     });
   }
   
-  // Sort households by head of household age (oldest to youngest)
-  return validHouseholds.sort((a, b) => {
+  // Sort households by head of household - generation first, then age
+  // Create a new array to avoid mutating the original
+  const sorted = [...validHouseholds].sort((a, b) => {
     const headA = getHeadOfHousehold(a.id);
     const headB = getHeadOfHousehold(b.id);
     
@@ -825,34 +856,89 @@ const householdsWithMembers = computed(() => {
     if (!headA) return 1;
     if (!headB) return -1;
     
-    // Sort by age (oldest first)
-    const ageA = headA.age;
-    const ageB = headB.age;
+    // First priority: Generation (G1 is oldest, then G2, etc.)
+    const genA = headA.generation ? parseInt(headA.generation.replace('G', '')) || 999 : 999;
+    const genB = headB.generation ? parseInt(headB.generation.replace('G', '')) || 999 : 999;
     
-    if (ageA === null || ageA === undefined) return 1;
-    if (ageB === null || ageB === undefined) return -1;
+    if (genA !== genB) {
+      return genA - genB; // Lower generation first (G1 before G2, etc.)
+    }
     
-    return ageB - ageA; // Descending order (oldest first)
+    // Second priority: Age (if same generation, oldest first)
+    const ageA = Number(headA.age);
+    const ageB = Number(headB.age);
+    
+    const hasAgeA = !isNaN(ageA) && ageA !== null && ageA !== undefined;
+    const hasAgeB = !isNaN(ageB) && ageB !== null && ageB !== undefined;
+    
+    // If both have ages, sort by age (oldest first)
+    if (hasAgeA && hasAgeB) {
+      const ageDiff = ageB - ageA; // Descending order (oldest first)
+      if (ageDiff !== 0) return ageDiff;
+    }
+    
+    // If one has age and one doesn't (same generation), prioritize the one with age
+    if (hasAgeA && !hasAgeB) return -1;
+    if (!hasAgeA && hasAgeB) return 1;
+    
+    // If neither has age (same generation), use name as tiebreaker
+    const nameA = (headA.full_name || `${headA.first_name} ${headA.last_name}`).toLowerCase();
+    const nameB = (headB.full_name || `${headB.first_name} ${headB.last_name}`).toLowerCase();
+    return nameA.localeCompare(nameB);
   });
+  
+  return sorted;
 });
 
 const personsWithoutHousehold = computed(() => {
   if (sortBy.value !== 'household') return [];
   
   // Filter to people without a household
-  const peopleWithout = persons.value.filter(p => !p.primary_household_id);
+  let peopleWithout = persons.value.filter(p => !p.primary_household_id);
   
   // Apply search filter if active
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    return peopleWithout.filter(p => {
+    peopleWithout = peopleWithout.filter(p => {
       const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
       const email = (p.email || '').toLowerCase();
-      return fullName.includes(query) || email.includes(query);
+      const phone = (p.phone || '').toLowerCase();
+      return fullName.includes(query) || email.includes(query) || phone.includes(query);
     });
   }
   
-  return peopleWithout;
+  // Sort by generation first, then age - they're all heads of their own household
+  return peopleWithout.sort((a, b) => {
+    // First priority: Generation (G1 is oldest, then G2, etc.)
+    const genA = a.generation ? parseInt(a.generation.replace('G', '')) || 999 : 999;
+    const genB = b.generation ? parseInt(b.generation.replace('G', '')) || 999 : 999;
+    
+    if (genA !== genB) {
+      return genA - genB; // Lower generation first (G1 before G2, etc.)
+    }
+    
+    // Second priority: Age (if same generation, oldest first)
+    const ageA = Number(a.age);
+    const ageB = Number(b.age);
+    
+    const hasAgeA = !isNaN(ageA) && ageA !== null && ageA !== undefined;
+    const hasAgeB = !isNaN(ageB) && ageB !== null && ageB !== undefined;
+    
+    // If both have ages, sort by age (oldest first)
+    if (hasAgeA && hasAgeB) {
+      const ageDiff = ageB - ageA; // Descending order (oldest first)
+      if (ageDiff !== 0) return ageDiff;
+    }
+    
+    // If one has age and one doesn't (same generation), prioritize the one with age
+    if (hasAgeA && !hasAgeB) return -1;
+    if (!hasAgeA && hasAgeB) return 1;
+    
+    // If neither has age (same generation), use name as tiebreaker
+    const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+    const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 });
 
 const filteredPersons = computed(() => {
@@ -864,7 +950,8 @@ const filteredPersons = computed(() => {
     filtered = filtered.filter(p => {
       const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
       const email = (p.email || '').toLowerCase();
-      return fullName.includes(query) || email.includes(query);
+      const phone = (p.phone || '').toLowerCase();
+      return fullName.includes(query) || email.includes(query) || phone.includes(query);
     });
   }
 

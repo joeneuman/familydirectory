@@ -1,0 +1,12 @@
+{
+  "name": "family-directory",
+  "version": "1.0.0",
+  "description": "Family Directory Application",
+  "type": "module",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "create:deployment": "node create-production-zip.js",
+    "deploy:package": "npm run build:frontend && npm run create:deployment"
+  }
+}
+

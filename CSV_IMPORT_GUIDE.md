@@ -9,7 +9,6 @@ Your CSV file must include these columns (some are optional):
 ### Required Columns
 - `first_name` - Person's first name
 - `last_name` - Person's last name
-- `household_name` - Name of the household (e.g., "John and Jane Household")
 
 ### Optional Columns
 - `email` - Email address (required for login, but can be added later)
@@ -27,18 +26,21 @@ Your CSV file must include these columns (some are optional):
 - `father_name` - Full name: "First Last" (for parent-child relationship)
 - `spouse_name` - Full name: "First Last" (for marital relationship)
 - `is_deceased` - "true" or "false" (defaults to false)
+- `is_admin` - "true" or "false" (defaults to false) - Set to "true" to make this person an administrator
 - `photo_url` - URL to a photo image
 
 ## Example CSV
 
 ```csv
-first_name,last_name,email,phone,address_line1,city,state,postal_code,date_of_birth,wedding_anniversary_date,generation,household_name,mother_name,father_name,spouse_name,is_deceased
-Jane,Smith,jane@example.com,555-0100,123 Main St,Springfield,IL,62701,1950-01-15,1970-06-20,G1,Smith Household,,,,false
-John,Smith,john@example.com,555-0101,123 Main St,Springfield,IL,62701,1948-03-10,1970-06-20,G1,Smith Household,,,Jane Smith,false
-Alice,Smith,alice@example.com,555-0200,456 Oak Ave,Chicago,IL,60601,1975-05-12,2000-08-15,G2,Smith-Doe Household,Jane Smith,John Smith,Bob Doe,false
-Bob,Doe,bob@example.com,555-0201,456 Oak Ave,Chicago,IL,60601,1973-07-22,2000-08-15,G2,Smith-Doe Household,,,Alice Smith,false
-Charlie,Doe,charlie@example.com,555-0300,456 Oak Ave,Chicago,IL,60601,2005-11-30,,G3,Smith-Doe Household,Alice Smith,Bob Doe,,false
+first_name,last_name,email,phone,address_line1,city,state,postal_code,date_of_birth,wedding_anniversary_date,generation,mother_name,father_name,spouse_name,is_deceased,is_admin
+Jane,Smith,jane@example.com,555-0100,123 Main St,Springfield,IL,62701,1950-01-15,1970-06-20,G1,,,John Smith,false,true
+John,Smith,john@example.com,555-0101,123 Main St,Springfield,IL,62701,1948-03-10,1970-06-20,G1,,,Jane Smith,false,false
+Alice,Smith,alice@example.com,555-0200,456 Oak Ave,Chicago,IL,60601,1975-05-12,2000-08-15,G2,Jane Smith,John Smith,Bob Doe,false,false
+Bob,Doe,bob@example.com,555-0201,456 Oak Ave,Chicago,IL,60601,1973-07-22,2000-08-15,G2,,,Alice Smith,false,false
+Charlie,Doe,charlie@example.com,555-0300,456 Oak Ave,Chicago,IL,60601,2005-11-30,,G3,Alice Smith,Bob Doe,,false,false
 ```
+
+**Note:** Each person will be imported as the head of their own household. After import, you can use the "Manage Household" feature in the UI to assign people to the same household (e.g., assign John to Jane's household, or assign Alice, Bob, and Charlie to the same household).
 
 ## Preparing Your Data
 
@@ -61,9 +63,10 @@ Before importing, ensure:
   - ✅ Correct: "1975-05-12"
   - ❌ Wrong: "5/12/1975" or "May 12, 1975"
 
-- **Household names are consistent**:
-  - All members of the same household must have the same `household_name`
-  - Example: "Smith Household" for all Smith family members
+- **Households**:
+  - People are imported without households
+  - The existing system automatically treats people without households as heads of their own household
+  - After import, you can manually assign people to households through the UI
 
 - **Generations are set**:
   - G1 = Root generation (your mother)
@@ -88,13 +91,13 @@ node scripts/import-csv.js path/to/your/data.csv
 
 ### What Happens During Import
 
-1. **Households are created** - One per unique `household_name`
-2. **Persons are created** - Linked to their household
-3. **Ages are calculated** - From `date_of_birth`
-4. **Years married are calculated** - From `wedding_anniversary_date`
-5. **Parent-child relationships** - Created from `mother_name` and `father_name`
-6. **Marital relationships** - Created from `spouse_name`
-7. **Primary contacts** - First non-deceased person in each household becomes primary contact
+1. **Persons are created** - People are imported without households
+2. **Ages are calculated** - From `date_of_birth`
+3. **Years married are calculated** - From `wedding_anniversary_date`
+4. **Parent-child relationships** - Created from `mother_name` and `father_name`
+5. **Marital relationships** - Created from `spouse_name`
+
+**Note:** The existing system automatically treats people without households as heads of their own household. After import, you can manually assign people to households through the UI by editing a person and using the "Manage Household" feature.
 
 ### Import Output
 
@@ -114,8 +117,10 @@ The script will log:
 - Check that `spouse_name` exactly matches `first_name last_name` in the CSV
 - Ensure the spouse is listed in the CSV
 
-**Duplicate household names**
-- All members of the same household must have identical `household_name` values
+**Household assignment**
+- Each person is imported as the head of their own household
+- After import, use the "Manage Household" feature in the UI to assign people to households
+- This allows you to manually organize your family structure
 
 **Missing emails**
 - People without emails cannot log in

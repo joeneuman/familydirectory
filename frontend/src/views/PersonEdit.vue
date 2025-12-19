@@ -216,21 +216,44 @@
           <div>
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Photo</h2>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Photo URL</label>
+              <!-- Current photo preview -->
+              <div v-if="formData.photo_url" class="mb-4">
+                <img 
+                  :src="getPhotoURL(formData.photo_url)" 
+                  alt="Current photo" 
+                  class="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                />
+                <button
+                  type="button"
+                  @click="formData.photo_url = ''"
+                  class="mt-2 text-sm text-red-600 hover:text-red-800"
+                >
+                  Remove photo
+                </button>
+              </div>
+              
+              <!-- File upload -->
+              <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photo</label>
               <input
-                v-model="formData.photo_url"
-                type="url"
-                placeholder="https://..."
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                @change="handlePhotoUpload"
+                class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
               />
-              <p class="mt-1 text-sm text-gray-500">Enter a URL to a photo</p>
+              <p class="mt-1 text-sm text-gray-500">Upload a photo (JPEG, PNG, GIF, or WebP, max 5MB)</p>
+              
+              <!-- Upload progress -->
+              <div v-if="uploading" class="mt-2 text-sm text-gray-600">
+                Uploading...
+              </div>
             </div>
           </div>
 
           <!-- Household Management -->
-          <div v-if="person.primary_household_id">
+          <div>
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Household Management</h2>
             <div class="space-y-4">
+              <!-- Manage Household button - show for everyone (they're all heads of their own household) -->
               <div>
                 <button
                   type="button"
@@ -244,6 +267,7 @@
                 </p>
               </div>
               
+              <!-- Remove from Household - only show if person is in a household -->
               <div v-if="person.primary_household_id" class="border-t border-gray-200 pt-4">
                 <p class="text-sm text-gray-600 mb-2">
                   This person is currently in a household.
@@ -260,21 +284,38 @@
           </div>
 
           <!-- Buttons -->
-          <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-            <router-link
-              :to="`/person/${person.id}`"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </router-link>
-            <button
-              type="submit"
-              :disabled="saving"
-              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-            >
-              <span v-if="saving">Saving...</span>
-              <span v-else>Save Changes</span>
-            </button>
+          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+            <!-- Delete button (admin only) -->
+            <div v-if="authStore.currentUser && authStore.currentUser.is_admin">
+              <button
+                type="button"
+                @click="handleDelete"
+                :disabled="deleting"
+                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                <span v-if="deleting">Deleting...</span>
+                <span v-else>Delete Contact</span>
+              </button>
+            </div>
+            <div v-else class="w-0"></div>
+            
+            <!-- Save/Cancel buttons -->
+            <div class="flex space-x-4">
+              <router-link
+                :to="`/person/${person.id}`"
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </router-link>
+              <button
+                type="submit"
+                :disabled="saving"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              >
+                <span v-if="saving">Saving...</span>
+                <span v-else>Save Changes</span>
+              </button>
+            </div>
           </div>
         </div>
       </form>
@@ -374,7 +415,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
-import { getApiBaseURL } from '../utils/api.js';
+import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -382,12 +423,14 @@ const authStore = useAuthStore();
 const person = ref(null);
 const loading = ref(true);
 const saving = ref(false);
+const deleting = ref(false);
 const error = ref(null);
 const showHouseholdModal = ref(false);
 const allPeople = ref([]);
 const selectedHouseholdMembers = ref([]);
 const loadingPeople = ref(false);
 const savingHousehold = ref(false);
+const uploading = ref(false);
 
 const formData = ref({
   first_name: '',
@@ -411,7 +454,7 @@ const formData = ref({
 
 async function fetchPerson() {
   try {
-    const response = await axios.get(`/api/persons/${route.params.id}`);
+    const response = await axios.get(`${getApiBaseURL()}/persons/${route.params.id}`);
     person.value = response.data;
     
     // Populate form
@@ -438,6 +481,46 @@ async function fetchPerson() {
     console.error('Error fetching person:', error);
   } finally {
     loading.value = false;
+  }
+}
+
+async function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = 'File size must be less than 5MB';
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Only image files are allowed (JPEG, PNG, GIF, WebP)';
+    return;
+  }
+
+  uploading.value = true;
+  error.value = null;
+
+  try {
+    const uploadFormData = new FormData();
+    uploadFormData.append('photo', file);
+
+    const response = await axios.post(`${getApiBaseURL()}/upload/photo`, uploadFormData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Update the photo_url with the returned path
+    formData.value.photo_url = response.data.photo_url;
+  } catch (err) {
+    console.error('Error uploading photo:', err);
+    error.value = err.response?.data?.error || 'Failed to upload photo';
+  } finally {
+    uploading.value = false;
   }
 }
 
@@ -534,6 +617,25 @@ async function removeFromHousehold() {
   } catch (error) {
     console.error('Error removing from household:', error);
     alert(error.response?.data?.error || 'Failed to remove from household');
+  }
+}
+
+async function handleDelete() {
+  const personName = person.value.full_name || `${person.value.first_name} ${person.value.last_name}`;
+  if (!confirm(`Are you sure you want to delete ${personName}? This action cannot be undone.`)) {
+    return;
+  }
+
+  deleting.value = true;
+  error.value = null;
+
+  try {
+    await axios.delete(`${getApiBaseURL()}/persons/${route.params.id}`);
+    // Redirect to directory after successful deletion
+    router.push('/directory');
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Failed to delete contact';
+    deleting.value = false;
   }
 }
 

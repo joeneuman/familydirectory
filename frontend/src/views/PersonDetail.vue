@@ -16,7 +16,7 @@
         <div class="flex flex-col sm:flex-row gap-6 mb-6">
           <div v-if="person.photo_url" class="flex-shrink-0">
             <img
-              :src="person.photo_url"
+              :src="getPhotoURL(person.photo_url)"
               :alt="person.full_name || `${person.first_name} ${person.last_name}`"
               class="w-32 h-32 rounded-full object-cover"
             />
@@ -171,6 +171,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { format, parseISO, subMonths } from 'date-fns';
+import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 const route = useRoute();
 const person = ref(null);
@@ -221,7 +222,7 @@ function isRecentChange(field) {
 
 async function fetchPerson() {
   try {
-    const response = await axios.get(`/api/persons/${route.params.id}`);
+    const response = await axios.get(`${getApiBaseURL()}/persons/${route.params.id}`);
     person.value = response.data;
   } catch (error) {
     console.error('Error fetching person:', error);
