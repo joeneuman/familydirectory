@@ -118,3 +118,4 @@ CREATE TRIGGER update_marital_relationships_updated_at BEFORE UPDATE ON marital_
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
+

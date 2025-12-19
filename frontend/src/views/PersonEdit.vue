@@ -283,6 +283,141 @@
             </div>
           </div>
 
+          <!-- Privacy Settings -->
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Privacy Settings</h2>
+            <p class="text-sm text-gray-600 mb-4">Select specific people who should have limited viewership of your information, and choose which fields to hide from them.</p>
+            
+            <!-- Select People with Limited Access -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">People with Limited Access</label>
+              <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                <div
+                  v-for="p in allPeople.filter(p => p.id !== person.id)"
+                  :key="p.id"
+                  class="flex items-center py-1"
+                >
+                  <input
+                    :id="`privacy-person-${p.id}`"
+                    type="checkbox"
+                    :value="p.id"
+                    v-model="privacySettings.restricted_people"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label 
+                    :for="`privacy-person-${p.id}`" 
+                    class="ml-3 flex-1 cursor-pointer text-sm text-gray-900"
+                  >
+                    {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                  </label>
+                </div>
+                <p v-if="allPeople.filter(p => p.id !== person.id).length === 0" class="text-sm text-gray-500 italic">
+                  No other people in the directory
+                </p>
+              </div>
+            </div>
+
+            <!-- Fields to Hide from Restricted People -->
+            <div v-if="privacySettings.restricted_people && privacySettings.restricted_people.length > 0">
+              <label class="block text-sm font-medium text-gray-700 mb-3">Fields to Hide from Selected People</label>
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <input
+                    id="privacy-photo"
+                    type="checkbox"
+                    v-model="privacySettings.photo"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-photo" class="ml-3 text-sm font-medium text-gray-700">Hide Photo</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-email"
+                    type="checkbox"
+                    v-model="privacySettings.email"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-email" class="ml-3 text-sm font-medium text-gray-700">Hide Email</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-phone"
+                    type="checkbox"
+                    v-model="privacySettings.phone"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-phone" class="ml-3 text-sm font-medium text-gray-700">Hide Phone</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-address"
+                    type="checkbox"
+                    v-model="privacySettings.address"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-address" class="ml-3 text-sm font-medium text-gray-700">Hide Address</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-generation"
+                    type="checkbox"
+                    v-model="privacySettings.generation"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-generation" class="ml-3 text-sm font-medium text-gray-700">Hide Generation</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-age"
+                    type="checkbox"
+                    v-model="privacySettings.age"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-age" class="ml-3 text-sm font-medium text-gray-700">Hide Age</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-birthday"
+                    type="checkbox"
+                    v-model="privacySettings.birthday"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-birthday" class="ml-3 text-sm font-medium text-gray-700">Hide Birthday</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-anniversary"
+                    type="checkbox"
+                    v-model="privacySettings.anniversary"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-anniversary" class="ml-3 text-sm font-medium text-gray-700">Hide Anniversary</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-years-married"
+                    type="checkbox"
+                    v-model="privacySettings.years_married"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-years-married" class="ml-3 text-sm font-medium text-gray-700">Hide Years Married</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="privacy-household-name"
+                    type="checkbox"
+                    v-model="privacySettings.household_name"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label for="privacy-household-name" class="ml-3 text-sm font-medium text-gray-700">Hide Household Name</label>
+                </div>
+              </div>
+            </div>
+            <p v-else class="text-sm text-gray-500 italic">
+              Select people above to configure which fields to hide from them.
+            </p>
+          </div>
+
           <!-- Buttons -->
           <div class="flex justify-between items-center pt-4 border-t border-gray-200">
             <!-- Delete button (admin only) -->
@@ -353,37 +488,57 @@
         </div>
 
         <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4 mb-4">
-          <div
-            v-for="p in allPeople"
-            :key="p.id"
-            class="flex items-center py-2 border-b border-gray-100 last:border-0"
-          >
-            <input
-              :id="`person-${p.id}`"
-              type="checkbox"
-              :value="p.id"
-              v-model="selectedHouseholdMembers"
-              :disabled="p.id === person.id || (p.primary_household_id && p.id !== person.id && hasOtherMembersInHousehold(p))"
-              :class="[
-                'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded',
-                (p.primary_household_id && p.id !== person.id && hasOtherMembersInHousehold(p)) ? 'opacity-50 cursor-not-allowed' : ''
-              ]"
-            />
-            <label 
-              :for="`person-${p.id}`" 
-              :class="[
-                'ml-3 flex-1',
-                (p.primary_household_id && p.id !== person.id && hasOtherMembersInHousehold(p)) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-              ]"
+          <!-- Spouse Selection -->
+          <div class="mb-4 pb-4 border-b border-gray-200">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Spouse (Optional)</label>
+            <select
+              v-model="selectedSpouse"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <span class="text-sm font-medium text-gray-900">
+              <option :value="null">None</option>
+              <option
+                v-for="p in allPeople.filter(p => p.id !== person.id)"
+                :key="p.id"
+                :value="p.id"
+              >
                 {{ p.full_name || `${p.first_name} ${p.last_name}` }}
-              </span>
-              <span v-if="p.id === person.id" class="ml-2 text-xs text-gray-500">(Head)</span>
-              <span v-if="p.primary_household_id && p.id !== person.id && hasOtherMembersInHousehold(p)" class="ml-2 text-xs text-orange-600">
-                (Currently in Another Household)
-              </span>
-            </label>
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">Select a spouse to show them directly under you in the family view and combine anniversaries in the event view.</p>
+          </div>
+
+          <!-- Household Members Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Household Members</label>
+            <div
+              v-for="p in allPeople"
+              :key="p.id"
+              class="flex items-center py-2 border-b border-gray-100 last:border-0"
+            >
+              <input
+                :id="`person-${p.id}`"
+                type="checkbox"
+                :value="p.id"
+                v-model="selectedHouseholdMembers"
+                :disabled="p.id === person.id"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label 
+                :for="`person-${p.id}`" 
+                class="ml-3 flex-1 cursor-pointer"
+              >
+                <span class="text-sm font-medium text-gray-900">
+                  {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                </span>
+                <span v-if="p.id === person.id" class="ml-2 text-xs text-gray-500">(Head)</span>
+                <span v-if="p.primary_household_id && p.id !== person.id" class="ml-2 text-xs text-orange-600">
+                  (Currently in Another Household)
+                </span>
+                <span v-if="selectedSpouse === p.id" class="ml-2 text-xs text-indigo-600">
+                  (Spouse)
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -428,6 +583,7 @@ const error = ref(null);
 const showHouseholdModal = ref(false);
 const allPeople = ref([]);
 const selectedHouseholdMembers = ref([]);
+const selectedSpouse = ref(null);
 const loadingPeople = ref(false);
 const savingHousehold = ref(false);
 const uploading = ref(false);
@@ -452,10 +608,41 @@ const formData = ref({
   is_admin: false,
 });
 
+const privacySettings = ref({
+  restricted_people: [], // Array of person IDs who should have limited access
+  photo: false,
+  email: false,
+  phone: false,
+  address: false,
+  generation: false,
+  age: false,
+  birthday: false,
+  anniversary: false,
+  years_married: false,
+  household_name: false,
+});
+
 async function fetchPerson() {
   try {
     const response = await axios.get(`${getApiBaseURL()}/persons/${route.params.id}`);
     person.value = response.data;
+    
+    // Initialize privacy settings from person data
+    if (person.value.privacy_settings) {
+      privacySettings.value = {
+        restricted_people: person.value.privacy_settings.restricted_people || [],
+        photo: person.value.privacy_settings.photo || false,
+        email: person.value.privacy_settings.email || false,
+        phone: person.value.privacy_settings.phone || false,
+        address: person.value.privacy_settings.address || false,
+        generation: person.value.privacy_settings.generation || false,
+        age: person.value.privacy_settings.age || false,
+        birthday: person.value.privacy_settings.birthday || false,
+        anniversary: person.value.privacy_settings.anniversary || false,
+        years_married: person.value.privacy_settings.years_married || false,
+        household_name: person.value.privacy_settings.household_name || false,
+      };
+    }
     
     // Populate form
     formData.value = {
@@ -541,6 +728,9 @@ async function handleSubmit() {
       delete dataToSend.country;
     }
     
+    // Add privacy settings to the update
+    dataToSend.privacy_settings = { ...privacySettings.value };
+    
     await axios.put(`${getApiBaseURL()}/persons/${route.params.id}`, dataToSend);
     router.push(`/person/${route.params.id}`);
   } catch (err) {
@@ -568,8 +758,23 @@ async function fetchAllPeople() {
   try {
     const response = await axios.get(`${getApiBaseURL()}/persons`);
     allPeople.value = response.data;
+    
     // Pre-select the current person
     selectedHouseholdMembers.value = [person.value.id];
+    
+    // Pre-select current household members (even if they're in another household)
+    if (person.value.primary_household_id) {
+      const currentMembers = allPeople.value.filter(p => 
+        p.primary_household_id === person.value.primary_household_id
+      );
+      const memberIds = currentMembers.map(m => m.id);
+      selectedHouseholdMembers.value = [...new Set([...selectedHouseholdMembers.value, ...memberIds])];
+    }
+    
+    // Pre-select current spouse if exists
+    if (person.value.spouse) {
+      selectedSpouse.value = person.value.spouse.id;
+    }
   } catch (error) {
     console.error('Error fetching people:', error);
   } finally {
@@ -586,10 +791,21 @@ async function saveHousehold() {
       householdId = 'new';
     }
     
+    // Save household members
     await axios.post(`${getApiBaseURL()}/households/${householdId}/set-head`, {
       headPersonId: person.value.id,
       memberIds: selectedHouseholdMembers.value,
     });
+
+    // Save spouse relationship if selected
+    if (selectedSpouse.value) {
+      await axios.post(`${getApiBaseURL()}/persons/${person.value.id}/set-spouse`, {
+        spouseId: selectedSpouse.value,
+      });
+    } else if (person.value.spouse) {
+      // Remove spouse if one was previously set but now cleared
+      await axios.delete(`${getApiBaseURL()}/persons/${person.value.id}/spouse`);
+    }
 
     showHouseholdModal.value = false;
     await fetchPerson(); // Refresh person data
@@ -648,6 +864,7 @@ watch(showHouseholdModal, (isOpen) => {
 
 onMounted(() => {
   fetchPerson();
+  fetchAllPeople(); // Load all people for privacy settings selection
 });
 </script>
 

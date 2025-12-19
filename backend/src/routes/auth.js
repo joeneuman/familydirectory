@@ -146,20 +146,66 @@ router.get('/verify', async (req, res) => {
     console.log('JWT token created successfully');
 
     // Redirect to frontend with token
-    // Use the request's origin to determine the correct frontend URL
-    // If request came from mobile (IP address), use IP for frontend too
-    const requestHost = req.get('host') || '';
+    // Use multiple methods to determine the correct frontend URL
+    // Priority: referer > origin > host header > request URL
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     
-    // If request came from IP address (not localhost), use IP for frontend
-    if (requestHost.includes('192.168.') || requestHost.includes('10.') || requestHost.includes('172.')) {
-      const ip = requestHost.split(':')[0];
-      frontendUrl = `http://${ip}:5173`;
+    // Check referer (where the link was clicked from)
+    const referer = req.get('referer') || req.headers.referer || '';
+    // Check origin header
+    const origin = req.get('origin') || req.headers.origin || '';
+    // Check host header
+    const requestHost = req.get('host') || '';
+    // Check the actual request URL
+    const requestUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    
+    console.log('Referer:', referer);
+    console.log('Origin:', origin);
+    console.log('Request Host:', requestHost);
+    console.log('Request URL:', requestUrl);
+    
+    // Extract IP from any of these sources
+    let detectedIp = null;
+    
+    // Check referer first (most reliable for mobile clicks)
+    if (referer) {
+      const refererMatch = referer.match(/(\d+\.\d+\.\d+\.\d+)/);
+      if (refererMatch) {
+        detectedIp = refererMatch[1];
+      }
+    }
+    
+    // Check origin if referer didn't have IP
+    if (!detectedIp && origin) {
+      const originMatch = origin.match(/(\d+\.\d+\.\d+\.\d+)/);
+      if (originMatch) {
+        detectedIp = originMatch[1];
+      }
+    }
+    
+    // Check host header if still no IP
+    if (!detectedIp && requestHost) {
+      if (requestHost.includes('192.168.') || requestHost.includes('10.') || requestHost.includes('172.')) {
+        detectedIp = requestHost.split(':')[0];
+      }
+    }
+    
+    // Check request URL as last resort
+    if (!detectedIp && requestUrl) {
+      const urlMatch = requestUrl.match(/(\d+\.\d+\.\d+\.\d+)/);
+      if (urlMatch) {
+        detectedIp = urlMatch[1];
+      }
+    }
+    
+    // If we detected an IP, use it for frontend URL
+    if (detectedIp) {
+      frontendUrl = `http://${detectedIp}:5173`;
+      console.log('Detected IP from request:', detectedIp);
     }
     
     const redirectUrl = `${frontendUrl}/auth/callback?token=${jwtToken}`;
-    console.log('Request host:', requestHost);
-    console.log('Frontend URL:', frontendUrl);
+    console.log('Final Frontend URL:', frontendUrl);
     console.log('Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   } catch (error) {

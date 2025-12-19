@@ -113,3 +113,4 @@ console.log(`\n🚀 Ready to upload to Hostinger database!\n`);
 
 await pool.end();
 
+

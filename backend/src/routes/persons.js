@@ -1,6 +1,7 @@
 import express from 'express';
 import { Person } from '../models/Person.js';
 import { Household } from '../models/Household.js';
+import { MaritalRelationship } from '../models/MaritalRelationship.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { canEdit } from '../utils/permissions.js';
 import { differenceInYears, parseISO } from 'date-fns';
@@ -106,13 +107,20 @@ router.get('/', async (req, res) => {
           }
         }
 
-        return {
+        // Get spouse if exists
+        const spouse = await Person.getSpouse(person.id);
+
+        const enrichedPerson = {
           ...person,
           age: calculatedAge,
           years_married: calculatedYearsMarried,
           is_head_of_household: isHeadOfHousehold,
           household_address: householdAddress,
+          spouse: spouse,
         };
+
+        // Filter private fields based on privacy settings
+        return filterPrivateFields(enrichedPerson, req.user.id);
       })
     );
 
@@ -193,6 +201,79 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Helper function to filter private fields based on privacy settings
+function filterPrivateFields(person, viewerId) {
+  // If viewing own profile, show everything
+  if (person.id === viewerId) {
+    return person;
+  }
+
+  // If no privacy settings, show everything
+  if (!person.privacy_settings || typeof person.privacy_settings !== 'object') {
+    return person;
+  }
+
+  const privacy = person.privacy_settings;
+  
+  // Check if viewer is in the restricted_people list
+  const restrictedPeople = privacy.restricted_people || [];
+  if (!Array.isArray(restrictedPeople) || restrictedPeople.length === 0) {
+    // No restrictions, show everything
+    return person;
+  }
+
+  // Check if current viewer is in the restricted list
+  const isRestricted = restrictedPeople.includes(viewerId);
+  if (!isRestricted) {
+    // Viewer is not restricted, show everything
+    return person;
+  }
+
+  // Viewer is restricted, apply privacy filters
+  const filtered = { ...person };
+
+  // Remove private fields based on privacy settings
+  if (privacy.photo) {
+    filtered.photo_url = null;
+  }
+  if (privacy.email) {
+    filtered.email = null;
+  }
+  if (privacy.phone) {
+    filtered.phone = null;
+  }
+  if (privacy.address) {
+    filtered.address_line1 = null;
+    filtered.address_line2 = null;
+    filtered.city = null;
+    filtered.state = null;
+    filtered.postal_code = null;
+    filtered.country = null;
+    filtered.household_address = null;
+  }
+  if (privacy.generation) {
+    filtered.generation = null;
+  }
+  if (privacy.age) {
+    filtered.age = null;
+  }
+  if (privacy.birthday) {
+    filtered.date_of_birth = null;
+  }
+  if (privacy.anniversary) {
+    filtered.wedding_anniversary_date = null;
+  }
+  if (privacy.years_married) {
+    filtered.years_married = null;
+  }
+  if (privacy.household_name) {
+    // This is handled in the frontend, but we can mark it
+    filtered.household_name_hidden = true;
+  }
+
+  return filtered;
+}
 
 // Helper function to get household address from members
 function getHouseholdAddress(members) {
@@ -317,7 +398,7 @@ router.get('/:id', async (req, res) => {
       }
     }
 
-    res.json({
+    const enrichedPerson = {
       ...person,
       age: calculatedAge,
       years_married: calculatedYearsMarried,
@@ -327,7 +408,12 @@ router.get('/:id', async (req, res) => {
       canEdit: hasEditPermission,
       is_head_of_household: isHeadOfHousehold,
       household_address: householdAddress,
-    });
+    };
+
+    // Filter private fields based on privacy settings (unless viewing own profile)
+    const filteredPerson = filterPrivateFields(enrichedPerson, req.user.id);
+
+    res.json(filteredPerson);
   } catch (error) {
     console.error('Error fetching person:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -487,6 +573,71 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Error creating person:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Set spouse relationship
+router.post('/:id/set-spouse', async (req, res) => {
+  try {
+    const personId = req.params.id;
+    const { spouseId } = req.body;
+
+    if (!spouseId) {
+      return res.status(400).json({ error: 'Spouse ID is required' });
+    }
+
+    // Check if person exists
+    const person = await Person.findById(personId);
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    // Check if spouse exists
+    const spouse = await Person.findById(spouseId);
+    if (!spouse) {
+      return res.status(404).json({ error: 'Spouse not found' });
+    }
+
+    // Check edit permission
+    const hasEditPermission = await canEdit(req.user.id, personId);
+    if (!hasEditPermission) {
+      return res.status(403).json({ error: 'You do not have permission to edit this person' });
+    }
+
+    // Set the spouse relationship
+    await MaritalRelationship.setSpouse(personId, spouseId);
+
+    res.json({ success: true, message: 'Spouse relationship set successfully' });
+  } catch (error) {
+    console.error('Error setting spouse:', error);
+    res.status(500).json({ error: 'Failed to set spouse relationship' });
+  }
+});
+
+// Remove spouse relationship
+router.delete('/:id/spouse', async (req, res) => {
+  try {
+    const personId = req.params.id;
+
+    // Check if person exists
+    const person = await Person.findById(personId);
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    // Check edit permission
+    const hasEditPermission = await canEdit(req.user.id, personId);
+    if (!hasEditPermission) {
+      return res.status(403).json({ error: 'You do not have permission to edit this person' });
+    }
+
+    // Remove the spouse relationship
+    await MaritalRelationship.removeSpouse(personId);
+
+    res.json({ success: true, message: 'Spouse relationship removed successfully' });
+  } catch (error) {
+    console.error('Error removing spouse:', error);
+    res.status(500).json({ error: 'Failed to remove spouse relationship' });
   }
 });
 

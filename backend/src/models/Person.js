@@ -2,8 +2,9 @@ import pool from '../config/database.js';
 
 export class Person {
   static async findByEmail(email) {
+    // Email lookups should be case-insensitive (RFC 5321)
     const result = await pool.query(
-      'SELECT * FROM persons WHERE email = $1',
+      'SELECT * FROM persons WHERE LOWER(email) = LOWER($1)',
       [email]
     );
     return result.rows[0] || null;
@@ -83,13 +84,20 @@ export class Person {
       'first_name', 'last_name', 'full_name', 'email', 'phone',
       'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
       'date_of_birth', 'age', 'wedding_anniversary_date', 'years_married',
-      'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin'
+      'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin',
+      'privacy_settings'
     ];
 
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
-        fields.push(`${field} = $${paramCount}`);
-        values.push(data[field]);
+        if (field === 'privacy_settings') {
+          // Handle JSONB field
+          fields.push(`${field} = $${paramCount}::jsonb`);
+          values.push(JSON.stringify(data[field]));
+        } else {
+          fields.push(`${field} = $${paramCount}`);
+          values.push(data[field]);
+        }
         paramCount++;
       }
     }

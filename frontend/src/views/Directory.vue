@@ -1,40 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-6">
-      <!-- Search and Sort -->
-      <div class="flex flex-col sm:flex-row gap-4 mb-6">
-        <div class="flex-1">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div class="flex items-center gap-3">
-          <button
-            @click="showFilterModal = true"
-            class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center gap-2"
-          >
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filter
-          </button>
-          <select
-            v-model="sortBy"
-            class="px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="household">Household</option>
-            <option value="next_event">Next Event</option>
-            <option value="age_asc">Youngest View</option>
-            <option value="age_desc">Oldest View</option>
-            <option value="generation">Generation</option>
-            <option value="name">Name (A-Z)</option>
-          </select>
-        </div>
-      </div>
-    </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-8">
 
     <!-- People List -->
     <div v-if="loading" class="text-center py-12">
@@ -73,9 +38,30 @@
                 <router-link :to="`/person/${event.personId}`" class="block">
                   <div class="flex items-start justify-between">
                     <div class="flex-1 flex items-start gap-3">
-                      <!-- Photo -->
-                      <div v-if="displayFilters.photo && event.photo_url" class="flex-shrink-0">
-                        <img :src="getPhotoURL(event.photo_url)" :alt="event.name" class="w-12 h-12 rounded-full object-cover" />
+                      <!-- Photos - show both side by side for anniversaries with spouse -->
+                      <div v-if="displayFilters.photo" class="flex-shrink-0">
+                        <!-- Anniversary with spouse - show both photos side by side -->
+                        <div v-if="event.hasAnniversary && event.spouseId && (event.photo_url || event.spouse_photo_url)" class="flex -space-x-2">
+                          <img 
+                            v-if="event.photo_url" 
+                            :src="getPhotoURL(event.photo_url)" 
+                            :alt="event.name.split(' & ')[0]" 
+                            class="w-12 h-12 rounded-full object-cover border-2 border-white" 
+                          />
+                          <img 
+                            v-if="event.spouse_photo_url" 
+                            :src="getPhotoURL(event.spouse_photo_url)" 
+                            :alt="event.name.split(' & ')[1]" 
+                            class="w-12 h-12 rounded-full object-cover border-2 border-white" 
+                          />
+                        </div>
+                        <!-- Single photo for birthdays or individual anniversaries -->
+                        <img 
+                          v-else-if="event.photo_url" 
+                          :src="getPhotoURL(event.photo_url)" 
+                          :alt="event.name" 
+                          class="w-12 h-12 rounded-full object-cover" 
+                        />
                       </div>
                       <div class="flex-1">
                         <h4 class="font-semibold text-gray-900 mb-1">{{ event.name }}</h4>
@@ -100,7 +86,7 @@
                           <div v-if="displayFilters.email && event.email" class="flex items-center">
                             <span class="font-medium mr-1">Email:</span> {{ event.email }}
                           </div>
-                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" class="flex items-center text-indigo-600 hover:text-indigo-800">
+                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
                             <span class="font-medium mr-1">Phone:</span> {{ event.phone }}
                           </a>
                         </div>
@@ -119,8 +105,11 @@
 
       <!-- Group by household if household sort is selected -->
       <template v-else-if="sortBy === 'household'">
-        <!-- Grouped by Household -->
-        <template v-for="(household, index) in householdsWithMembers" :key="household.id">
+        <!-- Grouped by Household (including individuals in their own households) -->
+        <template v-for="(item, index) in allHouseholdsSorted" :key="item.type === 'household' ? item.household.id : `individual-${item.person.id}`">
+          <!-- Regular household -->
+          <template v-if="item.type === 'household'">
+            <template v-for="(household, householdIndex) in [item.household]" :key="household.id">
           <div class="mt-4">
             <!-- Household Members - Head of household first, with bold name and address -->
             <!-- Box container around household -->
@@ -161,17 +150,18 @@
                             <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
                           </div>
                           <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
-                            <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
+                            <span class="font-medium mr-1">Married:</span> {{ person.years_married }}
                           </div>
                           <div v-if="displayFilters.email && person.email" class="flex items-center">
                             <span class="font-medium mr-1">Email:</span> {{ person.email }}
                           </div>
-                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" class="flex items-center text-indigo-600 hover:text-indigo-800">
+                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
                             <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                           </a>
-                          <!-- Don't show city/state if address is already shown for head -->
-                          <div v-if="displayFilters.location && !isHeadOfHousehold(household.id, person.id) && (person.city || person.state)" class="flex items-center">
-                            <span class="font-medium mr-1">Location:</span> {{ [person.city, person.state].filter(Boolean).join(', ') }}
+                          <!-- Show household name for non-head members (if not hidden by privacy) -->
+                          <div v-if="displayFilters.household_name && !isHeadOfHousehold(household.id, person.id) && !(person.privacy_settings && person.privacy_settings.household_name)" class="flex items-center">
+                            <span class="font-medium mr-1">Household:</span> 
+                            {{ getHeadOfHouseholdName(household.id) }}
                           </div>
                         </div>
                       </div>
@@ -188,11 +178,12 @@
               <div class="border-b-4 border-gray-300"></div>
             </div>
           </div>
-        </template>
-
-        <!-- People without households (each is their own head) -->
-        <template v-if="personsWithoutHousehold.length > 0">
-          <template v-for="(person, index) in personsWithoutHousehold" :key="person.id">
+            </template>
+          </template>
+          
+          <!-- Individual person (their own household) -->
+          <template v-else-if="item.type === 'individual'">
+            <template v-for="(person, personIndex) in [item.person]" :key="person.id">
             <!-- Box container around person without household -->
             <div class="mt-4">
               <div class="border-t-4 border-l-4 border-r-4 border-gray-300">
@@ -228,13 +219,13 @@
                             <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
                               <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
                             </div>
-                            <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
-                              <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
+                            <div v-if="displayFilters.years_married && person.wedding_anniversary_date" class="flex items-center">
+                              <span class="font-medium mr-1">Married:</span>
                             </div>
                             <div v-if="displayFilters.email && person.email" class="flex items-center">
                               <span class="font-medium mr-1">Email:</span> {{ person.email }}
                             </div>
-                            <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" class="flex items-center text-indigo-600 hover:text-indigo-800">
+                            <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
                               <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                             </a>
                           </div>
@@ -251,6 +242,7 @@
                 <div class="border-b-4 border-gray-300"></div>
               </div>
             </div>
+            </template>
           </template>
         </template>
       </template>
@@ -296,11 +288,12 @@
                       <div v-if="displayFilters.email && person.email" class="flex items-center">
                         <span class="font-medium mr-1">Email:</span> {{ person.email }}
                       </div>
-                      <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" class="flex items-center text-indigo-600 hover:text-indigo-800">
+                      <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
                         <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                       </a>
-                      <div v-if="displayFilters.location && (person.city || person.state)" class="flex items-center">
-                        <span class="font-medium mr-1">Location:</span> {{ [person.city, person.state].filter(Boolean).join(', ') }}
+                      <div v-if="displayFilters.household_name && person.primary_household_id && !(person.privacy_settings && person.privacy_settings.household_name)" class="flex items-center">
+                        <span class="font-medium mr-1">Household:</span> 
+                        {{ getHeadOfHouseholdName(person.primary_household_id) }}
                       </div>
                     </div>
                   </div>
@@ -411,12 +404,12 @@
           </div>
           <div class="flex items-center">
             <input
-              id="filter-location"
+              id="filter-household-name"
               type="checkbox"
-              v-model="displayFilters.location"
+              v-model="displayFilters.household_name"
               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             />
-            <label for="filter-location" class="ml-3 text-sm font-medium text-gray-700">Location (City/State)</label>
+            <label for="filter-household-name" class="ml-3 text-sm font-medium text-gray-700">Household Name</label>
           </div>
         </div>
 
@@ -444,30 +437,126 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue';
 import axios from 'axios';
 import { parseISO, format } from 'date-fns';
 import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
+// Inject shared state from App.vue
+const directorySearchQuery = inject('directorySearchQuery');
+const directorySortBy = inject('directorySortBy');
+const showDirectoryFilterModal = inject('showDirectoryFilterModal');
+
 const households = ref([]);
 const persons = ref([]);
-const searchQuery = ref('');
-const sortBy = ref('household'); // Default to household
 const loading = ref(true);
-const showFilterModal = ref(false);
 
-// Default display filters
+// Use injected values with local computed refs for reactivity
+const searchQuery = computed({
+  get: () => directorySearchQuery.value,
+  set: (value) => { directorySearchQuery.value = value; }
+});
+
+const sortBy = computed({
+  get: () => directorySortBy.value,
+  set: (value) => { directorySortBy.value = value; }
+});
+
+const showFilterModal = computed({
+  get: () => showDirectoryFilterModal.value,
+  set: (value) => { showDirectoryFilterModal.value = value; }
+});
+
+// Default display filters for MVP - based on Joseph Neuman's preferences
+// These are used when no saved preferences exist for a view
+// View-specific defaults
+const defaultDisplayFiltersByView = {
+  household: {
+    photo: true,
+    email: true,
+    phone: true,
+    address: true,
+    generation: false,
+    age: true,
+    birthday: false,
+    anniversary: false,
+    years_married: true,
+    household_name: false,
+  },
+  next_event: {
+    photo: true,
+    email: false,
+    phone: false,
+    address: true,
+    generation: false,
+    age: true,
+    birthday: true,
+    anniversary: true,
+    years_married: true,
+    household_name: false,
+  },
+  age_asc: {
+    photo: true,
+    email: true,
+    phone: true,
+    address: false,
+    generation: false,
+    age: true,
+    birthday: true,
+    anniversary: false,
+    years_married: false,
+    household_name: true,
+  },
+  age_desc: {
+    photo: true,
+    email: true,
+    phone: true,
+    address: false,
+    generation: false,
+    age: true,
+    birthday: true,
+    anniversary: false,
+    years_married: false,
+    household_name: true,
+  },
+  generation: {
+    photo: true,
+    email: true,
+    phone: true,
+    address: false,
+    generation: false,
+    age: true,
+    birthday: true,
+    anniversary: false,
+    years_married: false,
+    household_name: true,
+  },
+  name: {
+    photo: true,
+    email: true,
+    phone: true,
+    address: false,
+    generation: false,
+    age: true,
+    birthday: true,
+    anniversary: false,
+    years_married: false,
+    household_name: true,
+  },
+};
+
+// Fallback default (used if view type not found in defaults)
 const defaultDisplayFilters = {
-  photo: false,
+  photo: true,
   email: true,
   phone: true,
-  address: true,
-  generation: true,
+  address: false,
+  generation: false,
   age: true,
   birthday: true,
-  anniversary: true,
+  anniversary: false,
   years_married: false,
-  location: true,
+  household_name: true,
 };
 
 // Get current view type (used for preference key)
@@ -493,17 +582,20 @@ async function loadDisplayFilters() {
   const viewKey = `directoryDisplayFilters_${currentViewType.value}`;
   try {
     const response = await axios.get(`/api/preferences/${viewKey}`);
-    return { ...defaultDisplayFilters, ...response.data };
+    // Merge saved preferences with view-specific defaults
+    const viewDefaults = defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters;
+    return { ...viewDefaults, ...response.data };
   } catch (error) {
-    // If preference doesn't exist (404), use defaults
+    // If preference doesn't exist (404), use view-specific defaults
     if (error.response?.status === 404) {
-      return { ...defaultDisplayFilters };
+      return { ...(defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters) };
     }
     console.error('Error loading saved filters:', error);
-    return { ...defaultDisplayFilters };
+    return { ...(defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters) };
   }
 }
 
+// Initialize with defaults for current view (will be updated on mount)
 const displayFilters = ref({ ...defaultDisplayFilters });
 
 // Reload filters when view changes
@@ -562,7 +654,7 @@ function formatDateShort(dateString) {
 function formatScheduleDate(dateString) {
   try {
     const date = parseISO(dateString);
-    return format(date, 'EEEE, MMMM d, yyyy'); // e.g., "Monday, February 18, 2024"
+    return format(date, 'MMMM d, yyyy - EEEE'); // e.g., "January 4, 2026 - Sunday"
   } catch {
     return dateString;
   }
@@ -574,6 +666,9 @@ const scheduleView = computed(() => {
   
   const now = new Date();
   const events = [];
+  
+  // Track processed spouses to avoid duplicate anniversaries
+  const processedSpousePairs = new Set();
   
   // Collect all birthdays and anniversaries for next 12 months
   persons.value.forEach(person => {
@@ -635,19 +730,46 @@ const scheduleView = computed(() => {
           if (daysUntil <= 365) {
             const eventDate = targetAnn.toISOString().split('T')[0];
             const yearsAtEvent = targetAnn === thisYearAnn ? person.years_married : (person.years_married ? person.years_married + 1 : null);
-            events.push({
-              date: eventDate,
-              personId: person.id,
-              name: person.full_name || `${person.first_name} ${person.last_name}`,
-              eventType: 'anniversary',
-              age: person.age,
-              generation: person.generation,
-              email: person.email,
-              phone: person.phone,
-              photo_url: person.photo_url,
-              years_married: yearsAtEvent,
-              address: getPersonAddress(person),
-            });
+            
+            // Check if this person has a spouse and create a combined anniversary event
+            if (person.spouse) {
+              const spousePairKey = [person.id, person.spouse.id].sort().join('_');
+              if (!processedSpousePairs.has(spousePairKey)) {
+                processedSpousePairs.add(spousePairKey);
+                const spouseName = person.spouse.full_name || `${person.spouse.first_name} ${person.spouse.last_name}`;
+                const combinedName = `${person.full_name || `${person.first_name} ${person.last_name}`} & ${spouseName}`;
+                events.push({
+                  date: eventDate,
+                  personId: person.id,
+                  spouseId: person.spouse.id,
+                  name: combinedName,
+                  eventType: 'anniversary',
+                  age: person.age,
+                  generation: person.generation,
+                  email: person.email,
+                  phone: person.phone,
+                  photo_url: person.photo_url,
+                  spouse_photo_url: person.spouse.photo_url,
+                  years_married: yearsAtEvent,
+                  address: getPersonAddress(person),
+                });
+              }
+            } else {
+              // No spouse, add individual anniversary
+              events.push({
+                date: eventDate,
+                personId: person.id,
+                name: person.full_name || `${person.first_name} ${person.last_name}`,
+                eventType: 'anniversary',
+                age: person.age,
+                generation: person.generation,
+                email: person.email,
+                phone: person.phone,
+                photo_url: person.photo_url,
+                years_married: yearsAtEvent,
+                address: getPersonAddress(person),
+              });
+            }
           }
         }
       } catch (e) {
@@ -657,18 +779,25 @@ const scheduleView = computed(() => {
   });
   
   // Group events by date, then by person (to combine birthday + anniversary on same date)
+  // For spouses, use a combined key
   const groupedByDateAndPerson = {};
   events.forEach(event => {
-    const key = `${event.date}_${event.personId}`;
+    // For spouse anniversaries, use a combined key
+    const key = event.spouseId 
+      ? `${event.date}_spouse_${[event.personId, event.spouseId].sort().join('_')}`
+      : `${event.date}_${event.personId}`;
+      
     if (!groupedByDateAndPerson[key]) {
       groupedByDateAndPerson[key] = {
         date: event.date,
         personId: event.personId,
+        spouseId: event.spouseId || null,
         name: event.name,
         generation: event.generation,
         email: event.email,
         phone: event.phone,
         photo_url: event.photo_url,
+        spouse_photo_url: event.spouse_photo_url || null,
         address: event.address,
         hasBirthday: false,
         hasAnniversary: false,
@@ -775,18 +904,39 @@ function isHeadOfHousehold(householdId, personId) {
   return head && head.id === personId;
 }
 
+function getHeadOfHouseholdName(householdId) {
+  const head = getHeadOfHousehold(householdId);
+  if (!head) return '';
+  return head.full_name || `${head.first_name} ${head.last_name}`;
+}
+
 function getSortedHouseholdMembers(householdId) {
   const members = getHouseholdMembers(householdId);
   const head = getHeadOfHousehold(householdId);
   
   if (!head) return members;
   
-  // Put head first, then rest
+  // Put head first, then spouse (if exists and in household), then rest
   const headIndex = members.findIndex(m => m.id === head.id);
   if (headIndex === -1) return members;
   
-  const sorted = [members[headIndex], ...members.filter(m => m.id !== head.id)];
-  return sorted;
+  const headMember = members[headIndex];
+  const otherMembers = members.filter(m => m.id !== head.id);
+  
+  // Find spouse if exists and is in this household
+  let spouse = null;
+  if (head.spouse && head.spouse.id) {
+    spouse = otherMembers.find(m => m.id === head.spouse.id);
+  }
+  const restMembers = spouse 
+    ? otherMembers.filter(m => m.id !== spouse.id)
+    : otherMembers;
+  
+  // Return: head, spouse (if exists and in household), then rest
+  if (spouse) {
+    return [headMember, spouse, ...restMembers];
+  }
+  return [headMember, ...restMembers];
 }
 
 function getPersonAddress(person) {
@@ -937,6 +1087,68 @@ const personsWithoutHousehold = computed(() => {
     // If neither has age (same generation), use name as tiebreaker
     const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
     const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+});
+
+// Combined list of households and individuals, sorted chronologically by head age
+const allHouseholdsSorted = computed(() => {
+  if (sortBy.value !== 'household') return [];
+  
+  // Get all households with members
+  const householdsList = householdsWithMembers.value.map(h => ({
+    type: 'household',
+    household: h,
+    head: getHeadOfHousehold(h.id)
+  }));
+  
+  // Get all persons without households (they're heads of their own household)
+  const individualsList = personsWithoutHousehold.value.map(p => ({
+    type: 'individual',
+    person: p,
+    head: p
+  }));
+  
+  // Combine and sort by head age
+  const combined = [...householdsList, ...individualsList];
+  
+  return combined.sort((a, b) => {
+    const headA = a.head;
+    const headB = b.head;
+    
+    // If no head found, put at the end
+    if (!headA && !headB) return 0;
+    if (!headA) return 1;
+    if (!headB) return -1;
+    
+    // First priority: Generation (G1 is oldest, then G2, etc.)
+    const genA = headA.generation ? parseInt(headA.generation.replace('G', '')) || 999 : 999;
+    const genB = headB.generation ? parseInt(headB.generation.replace('G', '')) || 999 : 999;
+    
+    if (genA !== genB) {
+      return genA - genB; // Lower generation first (G1 before G2, etc.)
+    }
+    
+    // Second priority: Age (if same generation, oldest first)
+    const ageA = Number(headA.age);
+    const ageB = Number(headB.age);
+    
+    const hasAgeA = !isNaN(ageA) && ageA !== null && ageA !== undefined;
+    const hasAgeB = !isNaN(ageB) && ageB !== null && ageB !== undefined;
+    
+    // If both have ages, sort by age (oldest first)
+    if (hasAgeA && hasAgeB) {
+      const ageDiff = ageB - ageA; // Descending order (oldest first)
+      if (ageDiff !== 0) return ageDiff;
+    }
+    
+    // If one has age and one doesn't (same generation), prioritize the one with age
+    if (hasAgeA && !hasAgeB) return -1;
+    if (!hasAgeA && hasAgeB) return 1;
+    
+    // If neither has age (same generation), use name as tiebreaker
+    const nameA = (headA.full_name || `${headA.first_name} ${headA.last_name}`).toLowerCase();
+    const nameB = (headB.full_name || `${headB.first_name} ${headB.last_name}`).toLowerCase();
     return nameA.localeCompare(nameB);
   });
 });

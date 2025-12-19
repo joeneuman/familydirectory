@@ -101,3 +101,4 @@ If SQL import doesn't work, you can run migrations via Node.js:
 2. Test the connection from your application
 3. Verify the application can read/write to the database
 
+
