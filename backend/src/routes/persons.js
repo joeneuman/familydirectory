@@ -463,16 +463,57 @@ router.put('/:id', async (req, res) => {
       delete req.body.country;
     }
 
+    // Convert empty strings to null for date fields
+    if (req.body.date_of_birth === '') {
+      req.body.date_of_birth = null;
+    }
+    if (req.body.wedding_anniversary_date === '') {
+      req.body.wedding_anniversary_date = null;
+    }
+
     // Calculate age if date_of_birth is provided
     if (req.body.date_of_birth) {
-      const dob = parseISO(req.body.date_of_birth);
-      req.body.age = differenceInYears(new Date(), dob);
+      try {
+        const dob = parseISO(req.body.date_of_birth);
+        const calculatedAge = differenceInYears(new Date(), dob);
+        req.body.age = isNaN(calculatedAge) ? null : calculatedAge;
+      } catch (e) {
+        req.body.age = null;
+      }
+    } else {
+      req.body.age = null;
     }
 
     // Calculate years_married if wedding_anniversary_date is provided
     if (req.body.wedding_anniversary_date) {
-      const annDate = parseISO(req.body.wedding_anniversary_date);
-      req.body.years_married = differenceInYears(new Date(), annDate);
+      try {
+        const annDate = parseISO(req.body.wedding_anniversary_date);
+        const calculatedYearsMarried = differenceInYears(new Date(), annDate);
+        req.body.years_married = isNaN(calculatedYearsMarried) ? null : calculatedYearsMarried;
+      } catch (e) {
+        req.body.years_married = null;
+      }
+    } else {
+      req.body.years_married = null;
+    }
+
+    // Validate and clean privacy_settings
+    if (req.body.privacy_settings) {
+      if (typeof req.body.privacy_settings !== 'object') {
+        req.body.privacy_settings = {};
+      } else {
+        // Ensure restricted_people is an array
+        if (req.body.privacy_settings.restricted_people && !Array.isArray(req.body.privacy_settings.restricted_people)) {
+          req.body.privacy_settings.restricted_people = [];
+        }
+        // Ensure all boolean fields are actually booleans
+        const booleanFields = ['photo', 'email', 'phone', 'address', 'generation', 'age', 'birthday', 'anniversary', 'years_married', 'household_name'];
+        for (const field of booleanFields) {
+          if (req.body.privacy_settings[field] !== undefined) {
+            req.body.privacy_settings[field] = Boolean(req.body.privacy_settings[field]);
+          }
+        }
+      }
     }
 
     // Update person
@@ -481,7 +522,12 @@ router.put('/:id', async (req, res) => {
     res.json(updatedPerson);
   } catch (error) {
     console.error('Error updating person:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

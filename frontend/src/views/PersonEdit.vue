@@ -728,8 +728,13 @@ async function handleSubmit() {
       delete dataToSend.country;
     }
     
-    // Add privacy settings to the update
-    dataToSend.privacy_settings = { ...privacySettings.value };
+    // Add privacy settings to the update (only if there are restrictions)
+    if (privacySettings.value.restricted_people && privacySettings.value.restricted_people.length > 0) {
+      dataToSend.privacy_settings = { ...privacySettings.value };
+    } else {
+      // If no restricted people, set to empty object
+      dataToSend.privacy_settings = { restricted_people: [] };
+    }
     
     await axios.put(`${getApiBaseURL()}/persons/${route.params.id}`, dataToSend);
     router.push(`/person/${route.params.id}`);
