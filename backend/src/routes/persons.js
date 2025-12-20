@@ -470,6 +470,12 @@ router.put('/:id', async (req, res) => {
     if (req.body.wedding_anniversary_date === '') {
       req.body.wedding_anniversary_date = null;
     }
+    
+    // Convert empty email string to null to avoid unique constraint violation
+    // PostgreSQL unique constraints treat empty strings as values, so multiple empty strings violate the constraint
+    if (req.body.email === '') {
+      req.body.email = null;
+    }
 
     // Calculate age if date_of_birth is provided
     if (req.body.date_of_birth) {
