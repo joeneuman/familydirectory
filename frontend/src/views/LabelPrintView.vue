@@ -87,6 +87,7 @@ async function fetchData() {
 /**
  * Process households into label data for printing
  * Creates labels with head of household and spouse names, plus address
+ * Includes both households with multiple members and individuals who are heads of their own household
  */
 async function processLabelData() {
   const labels = [];
@@ -97,6 +98,7 @@ async function processLabelData() {
     personsMap.set(person.id, person);
   });
   
+  // Process households from database
   for (const household of households.value) {
     // Skip households without members
     if (!household.members || household.members.length === 0) continue;
@@ -144,6 +146,58 @@ async function processLabelData() {
     const headFirstName = head.first_name;
     const headLastName = head.last_name;
     const headName = head.full_name || `${headFirstName} ${headLastName}`;
+    
+    if (spouse) {
+      const spouseFirstName = spouse.first_name;
+      const spouseLastName = spouse.last_name;
+      const spouseName = spouse.full_name || `${spouseFirstName} ${spouseLastName}`;
+      
+      // Check if last names match (case-insensitive)
+      if (headLastName && spouseLastName && headLastName.toLowerCase() === spouseLastName.toLowerCase()) {
+        // Same last name: "Jane and Jack Smith"
+        names = `${headFirstName} and ${spouseFirstName} ${headLastName}`;
+      } else {
+        // Different last names: "Jane Jones and Jack Smith" (head first)
+        names = `${headName} and ${spouseName}`;
+      }
+    } else {
+      names = headName;
+    }
+    
+    labels.push({
+      names,
+      ...address,
+    });
+  }
+  
+  // Process individuals who are heads of their own household (primary_household_id = null)
+  // These are people who don't belong to any household record but are treated as heads of their own household
+  const individualsWithoutHousehold = persons.value.filter(p => !p.primary_household_id);
+  
+  for (const individual of individualsWithoutHousehold) {
+    // Get spouse from person's spouse property (from persons API)
+    let spouse = null;
+    if (individual.spouse && individual.spouse.id) {
+      spouse = personsMap.get(individual.spouse.id) || individual.spouse;
+    }
+    
+    // Get address from individual
+    const address = {
+      address_line1: individual.address_line1,
+      address_line2: individual.address_line2,
+      city: individual.city,
+      state: individual.state,
+      postal_code: individual.postal_code,
+    };
+    
+    // Skip if no address
+    if (!address.address_line1 && !address.city) continue;
+    
+    // Format names: head always listed first
+    let names = '';
+    const headFirstName = individual.first_name;
+    const headLastName = individual.last_name;
+    const headName = individual.full_name || `${headFirstName} ${headLastName}`;
     
     if (spouse) {
       const spouseFirstName = spouse.first_name;
