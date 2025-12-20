@@ -12,14 +12,25 @@
           <!-- Search, Filter, and Sort - only show on Directory page -->
           <div v-if="route.name === 'Directory'" class="flex-1 flex items-center gap-2 sm:gap-3 mx-2 sm:mx-4">
             <!-- Search Input - full width on larger screens, icon on very small -->
-            <div class="hidden lg:flex flex-1 min-w-0 search-input-container">
+            <div class="hidden lg:flex flex-1 min-w-0 search-input-container relative">
               <input
                 :value="directorySearchQuery"
                 @input="updateDirectorySearch($event.target.value)"
                 type="text"
                 placeholder="Search by name, email, or phone..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               />
+              <!-- Clear button (X) - only show when there's text -->
+              <button
+                v-if="directorySearchQuery"
+                @click="updateDirectorySearch('')"
+                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                type="button"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
             <!-- Search Icon Button - shows on small screens -->
             <button
@@ -59,20 +70,27 @@
             class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg z-50 p-4"
           >
             <div class="max-w-7xl mx-auto flex items-center gap-3">
-              <input
-                :value="directorySearchQuery"
-                @input="updateDirectorySearch($event.target.value)"
-                type="text"
-                placeholder="Search by name, email, or phone..."
-                class="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                autofocus
-              />
-              <button
-                @click="closeSearchModal"
-                class="px-4 py-3 text-gray-600 hover:text-gray-900 font-medium"
-              >
-                Close
-              </button>
+              <div class="flex-1 relative">
+                <input
+                  :value="directorySearchQuery"
+                  @input="updateDirectorySearch($event.target.value)"
+                  type="text"
+                  placeholder="Search by name, email, or phone..."
+                  class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                  autofocus
+                />
+                <!-- Clear button (X) - only show when there's text -->
+                <button
+                  v-if="directorySearchQuery"
+                  @click="closeSearchModal"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  type="button"
+                >
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           

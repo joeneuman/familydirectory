@@ -36,14 +36,6 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Full Name</label>
-              <input
-                v-model="formData.full_name"
-                type="text"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
               <label class="block text-sm font-medium text-gray-700">Generation</label>
               <input
                 v-model="formData.generation"
@@ -84,19 +76,11 @@
               />
               <label class="ml-2 block text-sm font-medium text-gray-700">Is Deceased</label>
             </div>
-            <div class="flex items-center">
-              <input
-                v-model="isHeadOfHousehold"
-                type="checkbox"
-                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label class="ml-2 block text-sm font-medium text-gray-700">Head of Household</label>
-            </div>
           </div>
         </div>
 
-        <!-- Address (only shown if head of household) -->
-        <div v-if="isHeadOfHousehold">
+        <!-- Address -->
+        <div>
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Address</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
@@ -128,6 +112,10 @@
               <input
                 v-model="formData.state"
                 type="text"
+                maxlength="2"
+                pattern="[A-Za-z]{2}"
+                placeholder="CA"
+                @input="formData.state = formData.state.toUpperCase().replace(/[^A-Z]/g, '')"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -236,13 +224,11 @@ const router = useRouter();
 const authStore = useAuthStore();
 const saving = ref(false);
 const error = ref(null);
-const isHeadOfHousehold = ref(false);
 const uploading = ref(false);
 
 const formData = ref({
   first_name: '',
   last_name: '',
-  full_name: '',
   email: '',
   phone: '',
   address_line1: '',
@@ -338,22 +324,9 @@ async function handleSubmit() {
       }
     }
 
-    // Create the person first
+    // Create the person
     const response = await axios.post(`${getApiBaseURL()}/persons`, formData.value);
     const newPersonId = response.data.id;
-
-    // If head of household is checked, create household and set as head
-    if (isHeadOfHousehold.value) {
-      try {
-        await axios.post(`${getApiBaseURL()}/households/new/set-head`, {
-          headPersonId: newPersonId,
-          memberIds: [newPersonId], // Just the head for now
-        });
-      } catch (householdError) {
-        console.error('Error creating household:', householdError);
-        // Continue anyway - person is created, household can be set up later
-      }
-    }
 
     router.push(`/person/${newPersonId}`);
   } catch (err) {

@@ -45,8 +45,8 @@
             <div v-if="label.address_line2">{{ label.address_line2 }}</div>
             <div v-if="label.city || label.state || label.postal_code">
               <span v-if="label.city">{{ label.city }}</span><span v-if="label.city && label.state">, </span>
-              <span v-if="label.state">{{ label.state }}</span>
-              <span v-if="label.postal_code"> {{ label.postal_code }}</span>
+              <span v-if="label.state">{{ label.state }}</span><span v-if="label.state && label.postal_code">&nbsp;&nbsp;</span>
+              <span v-if="label.postal_code">{{ label.postal_code }}</span>
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@ onMounted(() => {
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
     gap: 0.02in 0.178in !important; /* Vertical gap: 0.02in, Horizontal gap: 0.178in */
-    padding: 0.5in 0.25in !important;
+    padding: 0 0.25in 0.5in 0.25in !important; /* top: 0, right, bottom, left - remove top padding */
     box-sizing: border-box !important;
     page-break-after: always !important;
     margin: 0 !important;

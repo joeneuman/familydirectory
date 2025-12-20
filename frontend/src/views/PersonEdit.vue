@@ -157,6 +157,10 @@
                 <input
                   v-model="formData.state"
                   type="text"
+                  maxlength="2"
+                  pattern="[A-Za-z]{2}"
+                  placeholder="CA"
+                  @input="formData.state = formData.state.toUpperCase().replace(/[^A-Z]/g, '')"
                   :disabled="person && !person.is_head_of_household"
                   :class="[
                     'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm',
