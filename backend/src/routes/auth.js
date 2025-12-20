@@ -199,8 +199,18 @@ router.get('/verify', async (req, res) => {
     }
     
     // If we detected an IP, use it for frontend URL
+    // In production, don't append port 5173 (that's for dev server)
     if (detectedIp) {
-      frontendUrl = `http://${detectedIp}:5173`;
+      // Use the detected IP without port in production, or use FRONTEND_URL if set
+      if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+        frontendUrl = process.env.FRONTEND_URL;
+      } else if (process.env.NODE_ENV === 'production') {
+        // Production without FRONTEND_URL set - use detected IP without port
+        frontendUrl = `http://${detectedIp}`;
+      } else {
+        // Development - use port 5173
+        frontendUrl = `http://${detectedIp}:5173`;
+      }
       console.log('Detected IP from request:', detectedIp);
     }
     
