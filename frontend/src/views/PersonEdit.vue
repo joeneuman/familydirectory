@@ -421,7 +421,7 @@
           <!-- Buttons -->
           <div class="flex justify-between items-center pt-4 border-t border-gray-200">
             <!-- Delete button (admin only) -->
-            <div v-if="authStore.currentUser && authStore.currentUser.is_admin">
+            <div v-if="authStore.currentUser?.is_admin">
               <button
                 type="button"
                 @click="handleDelete"
@@ -867,7 +867,11 @@ watch(showHouseholdModal, (isOpen) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
+  // Ensure current user is loaded
+  if (!authStore.currentUser) {
+    await authStore.fetchCurrentUser();
+  }
   fetchPerson();
   fetchAllPeople(); // Load all people for privacy settings selection
 });
