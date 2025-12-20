@@ -126,6 +126,20 @@ router.get('/verify', async (req, res) => {
 
     console.log('Person found:', person.first_name, person.last_name);
 
+    // If no admins exist, make this person the first admin
+    if (!person.is_admin) {
+      const adminCheck = await pool.query(
+        'SELECT COUNT(*) as count FROM persons WHERE is_admin = true'
+      );
+      const adminCount = parseInt(adminCheck.rows[0].count);
+      
+      if (adminCount === 0) {
+        console.log('No admins found. Making first user an admin:', person.email);
+        await Person.update(person.id, { is_admin: true });
+        person.is_admin = true; // Update local object for JWT
+      }
+    }
+
     // Mark token as used
     console.log('Marking token as used...');
     await MagicLinkToken.markAsUsed(token);
