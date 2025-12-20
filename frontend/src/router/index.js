@@ -6,6 +6,7 @@ import PersonDetail from '../views/PersonDetail.vue';
 import PersonEdit from '../views/PersonEdit.vue';
 import AuthCallback from '../views/AuthCallback.vue';
 import PrintView from '../views/PrintView.vue';
+import LabelPrintView from '../views/LabelPrintView.vue';
 import { useAuthStore } from '../stores/auth';
 
 const routes = [
@@ -53,6 +54,12 @@ const routes = [
     path: '/print',
     name: 'PrintView',
     component: PrintView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/print/labels',
+    name: 'LabelPrintView',
+    component: LabelPrintView,
     meta: { requiresAuth: true },
   },
   {

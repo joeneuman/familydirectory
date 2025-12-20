@@ -122,6 +122,13 @@
                   >
                     Print
                   </router-link>
+                  <router-link
+                    to="/print/labels"
+                    @click="showMenu = false"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Address Labels
+                  </router-link>
                   <button
                     @click="handleLogout"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
