@@ -16,25 +16,20 @@ export class MagicLinkToken {
 
   static async findByToken(token) {
     const result = await pool.query(
-      'SELECT * FROM magic_link_tokens WHERE token = $1 AND used = FALSE AND expires_at > NOW()',
+      'SELECT * FROM magic_link_tokens WHERE token = $1 AND expires_at > NOW()',
       [token]
     );
     return result.rows[0] || null;
   }
 
-  static async markAsUsed(token) {
-    await pool.query(
-      'UPDATE magic_link_tokens SET used = TRUE WHERE token = $1',
-      [token]
-    );
-  }
-
   static async cleanupExpired() {
     await pool.query(
-      'DELETE FROM magic_link_tokens WHERE expires_at < NOW() OR used = TRUE'
+      'DELETE FROM magic_link_tokens WHERE expires_at < NOW()'
     );
   }
 }
+
+
 
 
 

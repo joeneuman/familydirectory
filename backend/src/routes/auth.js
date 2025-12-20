@@ -74,7 +74,7 @@ router.get('/verify', async (req, res) => {
     
     if (!tokenRecord) {
       console.log('No token record found, checking database...');
-      // Check if token exists but is expired or used
+      // Check if token exists but is expired
       const allTokens = await pool.query(
         'SELECT * FROM magic_link_tokens WHERE token = $1',
         [token]
@@ -88,18 +88,20 @@ router.get('/verify', async (req, res) => {
       } else {
         const foundToken = allTokens.rows[0];
         console.log('Token details:', {
-          used: foundToken.used,
           expires_at: foundToken.expires_at,
           now: new Date(),
           isExpired: new Date(foundToken.expires_at) < new Date()
         });
         
-        if (foundToken.used) {
-          console.log('Token has already been used');
-          return res.status(400).json({ error: 'This link has already been used' });
-        } else if (new Date(foundToken.expires_at) < new Date()) {
+        if (new Date(foundToken.expires_at) < new Date()) {
           console.log('Token has expired');
-          return res.status(400).json({ error: 'This link has expired. Please request a new one.' });
+          // Redirect to login page with error message
+          let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+          const requestHost = req.get('host') || '';
+          if (requestHost && !requestHost.includes('localhost')) {
+            frontendUrl = `${req.protocol}://${requestHost.split(':')[0]}`;
+          }
+          return res.redirect(`${frontendUrl}/login?error=link_expired`);
         }
       }
       console.log('Token exists but findByToken returned null - unknown reason');
@@ -109,8 +111,7 @@ router.get('/verify', async (req, res) => {
     console.log('=== TOKEN IS VALID, PROCEEDING ===');
     console.log('Token record:', {
       email: tokenRecord.email,
-      expires_at: tokenRecord.expires_at,
-      used: tokenRecord.used
+      expires_at: tokenRecord.expires_at
     });
     console.log('Token is valid, getting person for email:', tokenRecord.email);
     
@@ -139,11 +140,6 @@ router.get('/verify', async (req, res) => {
         person.is_admin = true; // Update local object for JWT
       }
     }
-
-    // Mark token as used
-    console.log('Marking token as used...');
-    await MagicLinkToken.markAsUsed(token);
-    console.log('Token marked as used');
 
     // Create JWT
     console.log('Creating JWT token...');

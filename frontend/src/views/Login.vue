@@ -44,14 +44,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { getApiBaseURL } from '../utils/api.js';
 
+const route = useRoute();
 const email = ref('');
 const message = ref('');
 const messageType = ref('');
 const loading = ref(false);
+
+// Check for error query parameters on mount
+onMounted(() => {
+  const error = route.query.error;
+  if (error === 'link_expired') {
+    message.value = 'This login link has expired. Please request a new one.';
+    messageType.value = 'error';
+  }
+});
 
 async function handleSubmit() {
   loading.value = true;
