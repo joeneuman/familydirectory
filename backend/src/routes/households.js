@@ -118,11 +118,25 @@ async function findOldestBloodRelative(householdId, members, household = null) {
 }
 
 // Helper function to get household address from members
-function getHouseholdAddress(members) {
-  // Prefer address from oldest blood relative, or any member with address
-  const memberWithAddress = members.find(m => 
-    m.address_line1 || m.city || m.state
-  );
+// Prioritizes head of household's address, then falls back to any member with address
+function getHouseholdAddress(members, household = null) {
+  // First, try to get address from head of household (primary_contact_person_id)
+  let memberWithAddress = null;
+  
+  if (household && household.primary_contact_person_id) {
+    memberWithAddress = members.find(m => m.id === household.primary_contact_person_id);
+    // Only use head's address if they actually have one
+    if (memberWithAddress && !memberWithAddress.address_line1 && !memberWithAddress.city && !memberWithAddress.state) {
+      memberWithAddress = null;
+    }
+  }
+  
+  // If head doesn't have address, find any member with address
+  if (!memberWithAddress) {
+    memberWithAddress = members.find(m => 
+      m.address_line1 || m.city || m.state
+    );
+  }
   
   if (!memberWithAddress) return null;
 
@@ -168,8 +182,8 @@ router.get('/', async (req, res) => {
           displayName = `${oldestBloodRelative.first_name} ${oldestBloodRelative.last_name} Household`;
         }
 
-        // Get household address
-        const address = getHouseholdAddress(members);
+        // Get household address (prioritize head of household's address)
+        const address = getHouseholdAddress(members, household);
 
         return {
           ...household,
@@ -222,8 +236,8 @@ router.get('/:id', async (req, res) => {
       displayName = `${oldestBloodRelative.first_name} ${oldestBloodRelative.last_name} Household`;
     }
 
-    // Get household address
-    const address = getHouseholdAddress(members);
+    // Get household address (prioritize head of household's address)
+    const address = getHouseholdAddress(members, household);
 
     res.json({
       ...household,
@@ -321,7 +335,7 @@ router.post('/:id/set-head', async (req, res) => {
     const displayName = oldestBloodRelative 
       ? `${oldestBloodRelative.first_name} ${oldestBloodRelative.last_name} Household`
       : household.name;
-    const address = getHouseholdAddress(members);
+    const address = getHouseholdAddress(members, household);
 
     res.json({
       ...household,

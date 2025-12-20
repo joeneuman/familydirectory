@@ -525,6 +525,39 @@ router.put('/:id', async (req, res) => {
     // Update person
     const updatedPerson = await Person.update(personId, req.body);
     
+    // If head of household's address was updated, update all household members' addresses
+    if (isHeadOfHousehold && currentPerson.primary_household_id) {
+      const addressFields = ['address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country'];
+      const addressWasUpdated = addressFields.some(field => req.body[field] !== undefined);
+      
+      if (addressWasUpdated) {
+        // Get all household members (excluding the head)
+        const household = await Household.findById(currentPerson.primary_household_id);
+        if (household) {
+          const allMembers = await Person.findByHousehold(currentPerson.primary_household_id);
+          const membersToUpdate = allMembers.filter(m => m.id !== personId);
+          
+          // Prepare address fields from updated person
+          const headAddressFields = {
+            address_line1: req.body.address_line1 !== undefined ? req.body.address_line1 : updatedPerson.address_line1,
+            address_line2: req.body.address_line2 !== undefined ? req.body.address_line2 : updatedPerson.address_line2,
+            city: req.body.city !== undefined ? req.body.city : updatedPerson.city,
+            state: req.body.state !== undefined ? req.body.state : updatedPerson.state,
+            postal_code: req.body.postal_code !== undefined ? req.body.postal_code : updatedPerson.postal_code,
+            country: req.body.country !== undefined ? req.body.country : updatedPerson.country,
+          };
+          
+          // Update each member's address (only if user has permission to edit them)
+          for (const member of membersToUpdate) {
+            const canEditMember = await canEdit(req.user.id, member.id);
+            if (canEditMember) {
+              await Person.update(member.id, headAddressFields);
+            }
+          }
+        }
+      }
+    }
+    
     res.json(updatedPerson);
   } catch (error) {
     console.error('Error updating person:', error);
