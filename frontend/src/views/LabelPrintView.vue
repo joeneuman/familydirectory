@@ -1,21 +1,26 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Controls (hidden when printing) -->
-    <div class="no-print mb-6 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Address Labels - Avery 5163/8163</h1>
-      <div class="flex gap-3">
-        <button
-          @click="handlePrint"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-        >
-          Print Labels
-        </button>
-        <button
-          @click="$router.push('/directory')"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-        >
-          Back to Directory
-        </button>
+    <div class="no-print mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <h1 class="text-2xl font-bold text-gray-900">Address Labels - Avery 5163/8163</h1>
+        <div class="flex gap-3">
+          <button
+            @click="handlePrint"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Print Labels
+          </button>
+          <button
+            @click="$router.push('/directory')"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+          >
+            Back to Directory
+          </button>
+        </div>
+      </div>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+        <strong>Printing Instructions:</strong> Please set your printer margins to <strong>zero (0)</strong> for best results.
       </div>
     </div>
 
@@ -312,7 +317,7 @@ onMounted(() => {
   /* 2 columns x 5 rows = 10 labels per sheet */
   /* Each label: 2" x 4" */
   /* Sheet: 8.5" x 11" */
-  /* Gap: 0.02in vertical, 0.178in horizontal (spacing between labels) */
+  /* Gap: 0.414in vertical, 0.572in horizontal (spacing between labels - increased by 10mm) */
   
   .label-sheet {
     width: 8.5in !important;
@@ -320,8 +325,8 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.02in 0.178in !important; /* Vertical gap: 0.02in, Horizontal gap: 0.178in */
-    padding: 0 0.25in 0.5in 0.25in !important; /* top: 0, right, bottom, left - remove top padding */
+    gap: 0.414in 0.572in !important; /* Vertical gap: 0.414in, Horizontal gap: 0.572in (added 10mm/0.394in to each) */
+    padding: 0.5in 0.25in 0.5in 0.25in !important; /* top: 0.5in, right, bottom, left - add 0.5in top padding */
     box-sizing: border-box !important;
     page-break-after: always !important;
     margin: 0 !important;
