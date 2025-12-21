@@ -82,8 +82,8 @@
                 <!-- Clear button (X) - only show when there's text -->
                 <button
                   v-if="directorySearchQuery"
-                  @click="closeSearchModal"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  @click="updateDirectorySearch('')"
+                  class="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
                   type="button"
                 >
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +91,16 @@
                   </svg>
                 </button>
               </div>
+              <!-- Close button (X) - always visible to close modal -->
+              <button
+                @click="closeSearchModal"
+                class="px-3 py-2 text-gray-400 hover:text-gray-600 focus:outline-none flex-shrink-0"
+                type="button"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
           
