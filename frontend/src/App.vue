@@ -260,6 +260,9 @@ function closeSearchModal() {
 watch(showSearchModal, (isOpen) => {
   if (isOpen) {
     nextTick(() => {
+      // Scroll to top of page so user can see the top when keyboard appears
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
       if (searchInputRef.value) {
         searchInputRef.value.focus();
       }
