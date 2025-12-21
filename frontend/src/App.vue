@@ -72,12 +72,12 @@
             <div class="max-w-7xl mx-auto flex items-center gap-3">
               <div class="flex-1 relative">
                 <input
+                  ref="searchInputRef"
                   :value="directorySearchQuery"
                   @input="updateDirectorySearch($event.target.value)"
                   type="text"
                   placeholder="Search by name, email, or phone..."
                   class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                  autofocus
                 />
                 <!-- Clear button (X) - only show when there's text -->
                 <button
@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, provide } from 'vue';
+import { ref, computed, onMounted, watch, provide, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 
@@ -195,6 +195,7 @@ const directorySearchQuery = ref('');
 const directorySortBy = ref(getStoredSortBy());
 const showDirectoryFilterModal = ref(false);
 const showSearchModal = ref(false);
+const searchInputRef = ref(null);
 
 // Watch for changes and persist to localStorage
 watch(directorySortBy, (newValue) => {
@@ -234,6 +235,17 @@ function closeSearchModal() {
   showSearchModal.value = false;
   directorySearchQuery.value = '';
 }
+
+// Watch for search modal opening and focus the input
+watch(showSearchModal, (isOpen) => {
+  if (isOpen) {
+    nextTick(() => {
+      if (searchInputRef.value) {
+        searchInputRef.value.focus();
+      }
+    });
+  }
+});
 
 // Close menu when route changes
 watch(() => route.path, () => {
