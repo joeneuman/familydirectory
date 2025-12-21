@@ -64,10 +64,10 @@
             </select>
           </div>
           
-          <!-- Search Footer -->
+          <!-- Search Bar - Overlay at top -->
           <div
             v-if="showSearchModal"
-            class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg z-50 p-4"
+            class="fixed top-0 left-0 right-0 bg-white border-b border-gray-300 shadow-lg z-50 p-4"
           >
             <div class="max-w-7xl mx-auto flex items-center gap-3">
               <div class="flex-1 relative">
