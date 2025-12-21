@@ -326,7 +326,7 @@ onMounted(() => {
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
     gap: 0.217in 0.375in !important; /* Vertical gap: 0.217in, Horizontal gap: 0.375in (reduced by 5mm/0.197in from each) */
-    padding: 0.5in 0.25in 0.5in 0.25in !important; /* top: 0.5in, right, bottom, left - add 0.5in top padding */
+    padding: 0.5in 0.25in 0 0.25in !important; /* top: 0.5in, right: 0.25in, bottom: 0, left: 0.25in - no bottom padding */
     box-sizing: border-box !important;
     page-break-after: always !important;
     margin: 0 !important;
