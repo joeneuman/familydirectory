@@ -592,6 +592,42 @@ const loadingPeople = ref(false);
 const savingHousehold = ref(false);
 const uploading = ref(false);
 
+/**
+ * Format a date string for HTML date input (YYYY-MM-DD)
+ * Handles timezone issues by extracting just the date part
+ * without timezone interpretation
+ */
+function formatDateForInput(dateString) {
+  if (!dateString) return '';
+  
+  // If it's already in YYYY-MM-DD format, return as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+  
+  // If it has time component, extract just the date part
+  // This avoids timezone shifts when parsing ISO strings
+  const datePart = dateString.split('T')[0];
+  
+  // Validate it's in the correct format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return datePart;
+  }
+  
+  // Fallback: try to parse and format
+  try {
+    const date = new Date(dateString);
+    // Use UTC methods to avoid timezone shifts
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    console.warn('Invalid date string:', dateString);
+    return '';
+  }
+}
+
 const formData = ref({
   first_name: '',
   last_name: '',
@@ -661,8 +697,8 @@ async function fetchPerson() {
       state: person.value.state || '',
       postal_code: person.value.postal_code || '',
       country: person.value.country || 'USA',
-      date_of_birth: person.value.date_of_birth ? person.value.date_of_birth.split('T')[0] : '',
-      wedding_anniversary_date: person.value.wedding_anniversary_date ? person.value.wedding_anniversary_date.split('T')[0] : '',
+      date_of_birth: person.value.date_of_birth ? formatDateForInput(person.value.date_of_birth) : '',
+      wedding_anniversary_date: person.value.wedding_anniversary_date ? formatDateForInput(person.value.wedding_anniversary_date) : '',
       generation: person.value.generation || '',
       photo_url: person.value.photo_url || '',
       is_deceased: person.value.is_deceased || false,

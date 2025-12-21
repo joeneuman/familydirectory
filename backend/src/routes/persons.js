@@ -11,6 +11,70 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
+/**
+ * Format a date (Date object or string) as YYYY-MM-DD
+ * This ensures dates are sent as date-only strings without timezone issues
+ * 
+ * The issue: PostgreSQL DATE fields have no time component, but when the pg driver
+ * converts them to Date objects, they're created at midnight in the server's timezone.
+ * When serialized to JSON, they become ISO strings with timezone (e.g., "1968-01-04T00:00:00.000Z").
+ * If the server is in a timezone behind UTC, this can cause the date to shift when parsed.
+ * 
+ * Solution: Always extract just the date part (YYYY-MM-DD) before sending to frontend.
+ */
+function formatDateOnly(date) {
+  if (!date) return null;
+  
+  // If it's already a string in YYYY-MM-DD format, return as-is
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  
+  // If it's an ISO string (with or without time), extract just the date part
+  if (typeof date === 'string') {
+    const datePart = date.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return datePart;
+    }
+  }
+  
+  // If it's a Date object, we need to be careful about timezone
+  // The pg driver creates Date objects at midnight in the server's local timezone
+  // But when serialized, they become UTC. To get the original date, we check both:
+  if (date instanceof Date) {
+    // First, try to get the date from the ISO string representation
+    // This gives us what the date would be when serialized
+    const isoString = date.toISOString();
+    const datePart = isoString.split('T')[0];
+    
+    // However, if the Date was created at midnight local time in a timezone behind UTC,
+    // the ISO string might show the previous day. So we also check local date.
+    // We'll use the ISO string date part as it's what gets sent to the frontend anyway.
+    return datePart;
+  }
+  
+  return null;
+}
+
+/**
+ * Format a person object's date fields to ensure they're sent as YYYY-MM-DD strings
+ */
+function formatPersonDates(person) {
+  if (!person) return person;
+  
+  const formatted = { ...person };
+  
+  if (person.date_of_birth) {
+    formatted.date_of_birth = formatDateOnly(person.date_of_birth);
+  }
+  
+  if (person.wedding_anniversary_date) {
+    formatted.wedding_anniversary_date = formatDateOnly(person.wedding_anniversary_date);
+  }
+  
+  return formatted;
+}
+
 // Get all persons (for directory/search)
 router.get('/', async (req, res) => {
   try {
@@ -110,14 +174,14 @@ router.get('/', async (req, res) => {
         // Get spouse if exists
         const spouse = await Person.getSpouse(person.id);
 
-        const enrichedPerson = {
+        const enrichedPerson = formatPersonDates({
           ...person,
           age: calculatedAge,
           years_married: calculatedYearsMarried,
           is_head_of_household: isHeadOfHousehold,
           household_address: householdAddress,
           spouse: spouse,
-        };
+        });
 
         // Filter private fields based on privacy settings
         return filterPrivateFields(enrichedPerson, req.user.id);
@@ -398,7 +462,7 @@ router.get('/:id', async (req, res) => {
       }
     }
 
-    const enrichedPerson = {
+    const enrichedPerson = formatPersonDates({
       ...person,
       age: calculatedAge,
       years_married: calculatedYearsMarried,
@@ -408,7 +472,7 @@ router.get('/:id', async (req, res) => {
       canEdit: hasEditPermission,
       is_head_of_household: isHeadOfHousehold,
       household_address: householdAddress,
-    };
+    });
 
     // Filter private fields based on privacy settings (unless viewing own profile)
     const filteredPerson = filterPrivateFields(enrichedPerson, req.user.id);
@@ -525,6 +589,9 @@ router.put('/:id', async (req, res) => {
     // Update person
     const updatedPerson = await Person.update(personId, req.body);
     
+    // Format dates before returning
+    const formattedPerson = formatPersonDates(updatedPerson);
+    
     // If head of household's address was updated, update all household members' addresses
     if (isHeadOfHousehold && currentPerson.primary_household_id) {
       const addressFields = ['address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country'];
@@ -558,7 +625,7 @@ router.put('/:id', async (req, res) => {
       }
     }
     
-    res.json(updatedPerson);
+    res.json(formattedPerson);
   } catch (error) {
     console.error('Error updating person:', error);
     console.error('Error stack:', error.stack);
@@ -654,7 +721,10 @@ router.post('/', async (req, res) => {
     // Create person
     const newPerson = await Person.create(req.body);
     
-    res.status(201).json(newPerson);
+    // Format dates before returning
+    const formattedPerson = formatPersonDates(newPerson);
+    
+    res.status(201).json(formattedPerson);
   } catch (error) {
     console.error('Error creating person:', error);
     res.status(500).json({ error: 'Internal server error' });

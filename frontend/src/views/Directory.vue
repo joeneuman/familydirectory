@@ -642,10 +642,30 @@ async function saveAsDefault(event) {
 }
 
 
+/**
+ * Parse a date string in a timezone-agnostic way
+ * Extracts just the date part (YYYY-MM-DD) to avoid timezone shifts
+ */
+function parseDateOnly(dateString) {
+  if (!dateString) return null;
+  
+  // Extract just the date part (YYYY-MM-DD)
+  const datePart = dateString.split('T')[0];
+  
+  // Parse the date components directly to avoid timezone issues
+  const [year, month, day] = datePart.split('-').map(Number);
+  
+  // Create a date using local date components (not UTC)
+  // This ensures the date displays correctly regardless of server timezone
+  return new Date(year, month - 1, day);
+}
+
 function formatDateShort(dateString) {
   if (!dateString) return null;
   try {
-    return format(parseISO(dateString), 'MMM d, yy');
+    const date = parseDateOnly(dateString);
+    if (!date || isNaN(date.getTime())) return dateString;
+    return format(date, 'MMM d, yy');
   } catch {
     return dateString;
   }
@@ -653,7 +673,8 @@ function formatDateShort(dateString) {
 
 function formatScheduleDate(dateString) {
   try {
-    const date = parseISO(dateString);
+    const date = parseDateOnly(dateString);
+    if (!date || isNaN(date.getTime())) return dateString;
     return format(date, 'MMMM d, yyyy - EEEE'); // e.g., "January 4, 2026 - Sunday"
   } catch {
     return dateString;
@@ -675,7 +696,8 @@ const scheduleView = computed(() => {
     // Add birthday if exists
     if (person.date_of_birth) {
       try {
-        const birthDate = parseISO(person.date_of_birth);
+        const birthDate = parseDateOnly(person.date_of_birth);
+        if (!birthDate || isNaN(birthDate.getTime())) throw new Error('Invalid date');
         const thisYearBday = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
         const nextYearBday = new Date(now.getFullYear() + 1, birthDate.getMonth(), birthDate.getDate());
         
@@ -714,7 +736,8 @@ const scheduleView = computed(() => {
     // Add anniversary if exists
     if (person.wedding_anniversary_date) {
       try {
-        const annDate = parseISO(person.wedding_anniversary_date);
+        const annDate = parseDateOnly(person.wedding_anniversary_date);
+        if (!annDate || isNaN(annDate.getTime())) throw new Error('Invalid date');
         const thisYearAnn = new Date(now.getFullYear(), annDate.getMonth(), annDate.getDate());
         const nextYearAnn = new Date(now.getFullYear() + 1, annDate.getMonth(), annDate.getDate());
         

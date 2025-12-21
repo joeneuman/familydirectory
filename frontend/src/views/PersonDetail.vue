@@ -188,10 +188,30 @@ const hasRecentChanges = computed(() => {
          isRecentChange('wedding_anniversary_date');
 });
 
+/**
+ * Parse a date string in a timezone-agnostic way
+ * Extracts just the date part (YYYY-MM-DD) to avoid timezone shifts
+ */
+function parseDateOnly(dateString) {
+  if (!dateString) return null;
+  
+  // Extract just the date part (YYYY-MM-DD)
+  const datePart = dateString.split('T')[0];
+  
+  // Parse the date components directly to avoid timezone issues
+  const [year, month, day] = datePart.split('-').map(Number);
+  
+  // Create a date using local date components (not UTC)
+  // This ensures the date displays correctly regardless of server timezone
+  return new Date(year, month - 1, day);
+}
+
 function formatDate(dateString) {
   if (!dateString) return null;
   try {
-    return format(parseISO(dateString), 'MMMM d, yyyy');
+    const date = parseDateOnly(dateString);
+    if (!date || isNaN(date.getTime())) return dateString;
+    return format(date, 'MMMM d, yyyy');
   } catch {
     return dateString;
   }
