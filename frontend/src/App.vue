@@ -34,7 +34,7 @@
             </div>
             <!-- Search Icon Button - shows on small screens -->
             <button
-              @click="showSearchModal = true"
+              @click="toggleSearchModal"
               class="lg:hidden px-2 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-center flex-shrink-0"
             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,6 +229,16 @@ function updateDirectorySearch(value) {
 
 function updateDirectorySort(value) {
   directorySortBy.value = value;
+}
+
+function toggleSearchModal() {
+  if (showSearchModal.value) {
+    // If modal is open, close it
+    showSearchModal.value = false;
+  } else {
+    // If modal is closed, open it (focus will be handled by watcher)
+    showSearchModal.value = true;
+  }
 }
 
 function closeSearchModal() {
