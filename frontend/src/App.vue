@@ -260,12 +260,39 @@ function closeSearchModal() {
 watch(showSearchModal, (isOpen) => {
   if (isOpen) {
     nextTick(() => {
-      // Scroll to top of page so user can see the top when keyboard appears
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+      // Focus the input first
       if (searchInputRef.value) {
         searchInputRef.value.focus();
       }
+      
+      // After keyboard appears, scroll to show directory content area
+      // This ensures search results are visible above the fixed search bar
+      setTimeout(() => {
+        // Find the directory content container
+        const directoryContent = document.querySelector('.max-w-7xl');
+        if (directoryContent) {
+          // Get the position of the directory content
+          const contentTop = directoryContent.getBoundingClientRect().top + window.pageYOffset;
+          // Account for header height and some padding
+          const headerHeight = 80; // Approximate header height
+          const scrollPosition = contentTop - headerHeight;
+          
+          window.scrollTo({ 
+            top: Math.max(0, scrollPosition), 
+            behavior: 'smooth' 
+          });
+        } else {
+          // Fallback: scroll to show main content area
+          const mainContent = document.querySelector('main');
+          if (mainContent) {
+            const contentTop = mainContent.getBoundingClientRect().top + window.pageYOffset;
+            window.scrollTo({ 
+              top: Math.max(0, contentTop - 100), 
+              behavior: 'smooth' 
+            });
+          }
+        }
+      }, 400); // Wait for keyboard animation to complete
     });
   }
 });
