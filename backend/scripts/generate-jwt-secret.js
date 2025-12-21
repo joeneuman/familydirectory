@@ -14,3 +14,5 @@ console.log(`JWT_SECRET=${secret}`);
 console.log('\n⚠️  Keep this secret secure and never commit it to git!\n');
 
 
+
+

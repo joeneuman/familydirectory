@@ -119,3 +119,5 @@ CREATE TRIGGER update_marital_relationships_updated_at BEFORE UPDATE ON marital_
 
 
 
+
+

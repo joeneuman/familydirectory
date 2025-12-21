@@ -62,3 +62,5 @@ GRANT ALL PRIVILEGES ON DATABASE family_directory TO family_user;
 - DB_PASSWORD=your_strong_password_here
 
 
+
+

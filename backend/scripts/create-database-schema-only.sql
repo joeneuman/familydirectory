@@ -129,3 +129,5 @@ COMMENT ON TABLE magic_link_tokens IS 'Magic link authentication tokens';
 COMMENT ON TABLE user_preferences IS 'User-specific preferences and settings';
 
 
+
+

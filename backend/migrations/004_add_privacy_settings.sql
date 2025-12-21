@@ -5,3 +5,5 @@ ALTER TABLE persons ADD COLUMN IF NOT EXISTS privacy_settings JSONB DEFAULT '{}'
 -- Create index for privacy settings queries
 CREATE INDEX IF NOT EXISTS idx_persons_privacy_settings ON persons USING GIN (privacy_settings);
 
+
+
