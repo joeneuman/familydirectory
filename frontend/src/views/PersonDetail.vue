@@ -14,9 +14,9 @@
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <!-- Header with photo and name -->
         <div class="flex flex-col sm:flex-row gap-6 mb-6">
-          <div v-if="person.photo_url" class="flex-shrink-0">
+          <div class="flex-shrink-0">
             <img
-              :src="getPhotoURL(person.photo_url)"
+              :src="getPhotoURL(person.photo_url, person.id)"
               :alt="person.full_name || `${person.first_name} ${person.last_name}`"
               class="w-32 h-32 rounded-full object-cover"
             />

@@ -41,24 +41,22 @@
                       <!-- Photos - show both side by side for anniversaries with spouse -->
                       <div v-if="displayFilters.photo" class="flex-shrink-0">
                         <!-- Anniversary with spouse - show both photos side by side -->
-                        <div v-if="event.hasAnniversary && event.spouseId && (event.photo_url || event.spouse_photo_url)" class="flex -space-x-2">
+                        <div v-if="event.hasAnniversary && event.spouseId" class="flex -space-x-2">
                           <img 
-                            v-if="event.photo_url" 
-                            :src="getPhotoURL(event.photo_url)" 
+                            :src="getPhotoURL(event.photo_url, event.personId)" 
                             :alt="event.name.split(' & ')[0]" 
                             class="w-12 h-12 rounded-full object-cover border-2 border-white" 
                           />
                           <img 
-                            v-if="event.spouse_photo_url" 
-                            :src="getPhotoURL(event.spouse_photo_url)" 
+                            :src="getPhotoURL(event.spouse_photo_url, event.spouseId)" 
                             :alt="event.name.split(' & ')[1]" 
                             class="w-12 h-12 rounded-full object-cover border-2 border-white" 
                           />
                         </div>
                         <!-- Single photo for birthdays or individual anniversaries -->
                         <img 
-                          v-else-if="event.photo_url" 
-                          :src="getPhotoURL(event.photo_url)" 
+                          v-else
+                          :src="getPhotoURL(event.photo_url, event.personId)" 
                           :alt="event.name" 
                           class="w-12 h-12 rounded-full object-cover" 
                         />
@@ -123,8 +121,8 @@
                     <div class="flex items-start justify-between">
                     <div class="flex-1 flex items-start gap-3">
                       <!-- Photo -->
-                      <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                        <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                      <div v-if="displayFilters.photo" class="flex-shrink-0">
+                        <img :src="getPhotoURL(person.photo_url, person.id)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                       </div>
                       <div class="flex-1">
                         <!-- Bold name if head of household -->
@@ -193,8 +191,8 @@
                     <div class="flex items-start justify-between">
                       <div class="flex-1 flex items-start gap-3">
                         <!-- Photo -->
-                        <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                          <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                        <div v-if="displayFilters.photo" class="flex-shrink-0">
+                          <img :src="getPhotoURL(person.photo_url, person.id)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                         </div>
                         <div class="flex-1">
                           <!-- Bold name (they're their own head) -->
@@ -258,8 +256,8 @@
               <div class="flex items-start justify-between">
                 <div class="flex-1 flex items-start gap-3">
                   <!-- Photo -->
-                  <div v-if="displayFilters.photo && person.photo_url" class="flex-shrink-0">
-                    <img :src="getPhotoURL(person.photo_url)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                  <div v-if="displayFilters.photo" class="flex-shrink-0">
+                    <img :src="getPhotoURL(person.photo_url, person.id)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                   </div>
                   <div class="flex-1">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">
