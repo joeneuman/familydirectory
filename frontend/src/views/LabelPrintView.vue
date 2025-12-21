@@ -317,7 +317,7 @@ onMounted(() => {
   /* 2 columns x 5 rows = 10 labels per sheet */
   /* Each label: 2" x 4" */
   /* Sheet: 8.5" x 11" */
-  /* Gap: 0.414in vertical, 0.572in horizontal (spacing between labels - increased by 10mm) */
+  /* Gap: 0.217in vertical, 0.375in horizontal (spacing between labels - reduced by 5mm from previous) */
   
   .label-sheet {
     width: 8.5in !important;
@@ -325,7 +325,7 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.414in 0.572in !important; /* Vertical gap: 0.414in, Horizontal gap: 0.572in (added 10mm/0.394in to each) */
+    gap: 0.217in 0.375in !important; /* Vertical gap: 0.217in, Horizontal gap: 0.375in (reduced by 5mm/0.197in from each) */
     padding: 0.5in 0.25in 0.5in 0.25in !important; /* top: 0.5in, right, bottom, left - add 0.5in top padding */
     box-sizing: border-box !important;
     page-break-after: always !important;
