@@ -64,38 +64,26 @@
             </select>
           </div>
           
-          <!-- Search Overlay - Full Screen -->
+          <!-- Search Footer -->
           <div
             v-if="showSearchModal"
-            class="fixed inset-0 bg-black bg-opacity-50 z-50 flex flex-col"
-            @click.self="closeSearchModal"
+            class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg z-50 p-4"
           >
-            <!-- Search bar at bottom -->
-            <div class="mt-auto bg-white border-t border-gray-300 shadow-lg p-4 safe-area-bottom">
-              <div class="max-w-7xl mx-auto flex items-center gap-3">
-                <div class="flex-1 relative">
-                  <input
-                    ref="searchInputRef"
-                    :value="directorySearchQuery"
-                    @input="updateDirectorySearch($event.target.value)"
-                    type="text"
-                    placeholder="Search by name, email, or phone..."
-                    class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                  />
-                  <button
-                    v-if="directorySearchQuery"
-                    @click="updateDirectorySearch('')"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                    type="button"
-                  >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+            <div class="max-w-7xl mx-auto flex items-center gap-3">
+              <div class="flex-1 relative">
+                <input
+                  ref="searchInputRef"
+                  :value="directorySearchQuery"
+                  @input="updateDirectorySearch($event.target.value)"
+                  type="text"
+                  placeholder="Search by name, email, or phone..."
+                  class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                />
+                <!-- Clear button (X) - only show when there's text -->
                 <button
-                  @click="closeSearchModal"
-                  class="px-3 py-2 text-gray-600 hover:text-gray-900"
+                  v-if="directorySearchQuery"
+                  @click="updateDirectorySearch('')"
+                  class="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
                   type="button"
                 >
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,6 +91,16 @@
                   </svg>
                 </button>
               </div>
+              <!-- Close button (X) - always visible to close modal -->
+              <button
+                @click="closeSearchModal"
+                class="px-3 py-2 text-gray-400 hover:text-gray-600 focus:outline-none flex-shrink-0"
+                type="button"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
           
@@ -253,31 +251,13 @@ function toggleSearchModal() {
   }
 }
 
-// Add this new function
-function lockBodyScroll(lock) {
-  if (typeof document !== 'undefined') {
-    if (lock) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    }
-  }
-}
-
 function closeSearchModal() {
   showSearchModal.value = false;
   directorySearchQuery.value = '';
-  lockBodyScroll(false); // Ensure unlock on close
 }
 
-// Update the watch for search modal
+// Watch for search modal opening and focus the input
 watch(showSearchModal, (isOpen) => {
-  lockBodyScroll(isOpen); // Lock/unlock body scroll
-  
   if (isOpen) {
     nextTick(() => {
       if (searchInputRef.value) {
