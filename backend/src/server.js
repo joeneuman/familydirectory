@@ -26,10 +26,13 @@ const allowedOrigins = [
   'http://192.168.1.241:5173', // Add your local IP
   /^http:\/\/192\.168\.\d+\.\d+:5173$/, // Allow any 192.168.x.x IP
   /^http:\/\/10\.\d+\.\d+\.\d+:5173$/, // Allow any 10.x.x.x IP (common local network)
-  // Add production domain patterns
+  // Add production domain patterns (both HTTP and HTTPS)
   process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL 
     ? new RegExp(`^${process.env.FRONTEND_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
     : null,
+  // Explicitly allow HTTPS version of production domain
+  'https://neumanfam.com',
+  'http://neumanfam.com',
 ].filter(Boolean);
 
 app.use(cors({
