@@ -531,15 +531,15 @@ const defaultDisplayFiltersByView = {
   },
   name: {
     photo: true,
-    email: true,
+    email: false,
     phone: true,
     address: false,
     generation: false,
     age: true,
-    birthday: true,
+    birthday: false,
     anniversary: false,
     years_married: false,
-    household_name: true,
+    household_name: false,
   },
 };
 
