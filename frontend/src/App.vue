@@ -82,7 +82,7 @@
                 <!-- Clear button (X) - only show when there's text -->
                 <button
                   v-if="directorySearchQuery"
-                  @click="updateDirectorySearch('')"
+                  @click="clearSearchAndFocus"
                   class="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
                   type="button"
                 >
@@ -235,6 +235,16 @@ provide('showDirectoryFilterModal', showDirectoryFilterModal);
 
 function updateDirectorySearch(value) {
   directorySearchQuery.value = value;
+}
+
+function clearSearchAndFocus() {
+  updateDirectorySearch('');
+  // Refocus the input after clearing
+  nextTick(() => {
+    if (searchInputRef.value) {
+      searchInputRef.value.focus();
+    }
+  });
 }
 
 function updateDirectorySort(value) {
