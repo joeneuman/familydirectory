@@ -260,39 +260,27 @@ function closeSearchModal() {
 watch(showSearchModal, (isOpen) => {
   if (isOpen) {
     nextTick(() => {
-      // Focus the input first
-      if (searchInputRef.value) {
-        searchInputRef.value.focus();
+      // Prevent default scroll behavior when focusing
+      // Scroll to directory content first, then focus
+      const directoryContent = document.querySelector('.max-w-7xl');
+      if (directoryContent) {
+        const contentTop = directoryContent.getBoundingClientRect().top + window.pageYOffset;
+        const headerHeight = 80;
+        const scrollPosition = Math.max(0, contentTop - headerHeight);
+        
+        // Use instant scroll to prevent visual glitches
+        window.scrollTo({ 
+          top: scrollPosition, 
+          behavior: 'auto' 
+        });
       }
       
-      // After keyboard appears, scroll to show directory content area
-      // This ensures search results are visible above the fixed search bar
+      // Small delay before focusing to let scroll complete
       setTimeout(() => {
-        // Find the directory content container
-        const directoryContent = document.querySelector('.max-w-7xl');
-        if (directoryContent) {
-          // Get the position of the directory content
-          const contentTop = directoryContent.getBoundingClientRect().top + window.pageYOffset;
-          // Account for header height and some padding
-          const headerHeight = 80; // Approximate header height
-          const scrollPosition = contentTop - headerHeight;
-          
-          window.scrollTo({ 
-            top: Math.max(0, scrollPosition), 
-            behavior: 'smooth' 
-          });
-        } else {
-          // Fallback: scroll to show main content area
-          const mainContent = document.querySelector('main');
-          if (mainContent) {
-            const contentTop = mainContent.getBoundingClientRect().top + window.pageYOffset;
-            window.scrollTo({ 
-              top: Math.max(0, contentTop - 100), 
-              behavior: 'smooth' 
-            });
-          }
+        if (searchInputRef.value) {
+          searchInputRef.value.focus();
         }
-      }, 400); // Wait for keyboard animation to complete
+      }, 50);
     });
   }
 });
