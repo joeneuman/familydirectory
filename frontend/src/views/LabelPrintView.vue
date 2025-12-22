@@ -333,7 +333,7 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.059in 0.217in !important; /* Vertical gap: 0.059in, Horizontal gap: 0.217in (reduced by 2mm/0.079in from previous) */
+    gap: 0.01in 0.217in !important; /* Vertical gap: 0.01in (reduced by 3mm/0.118in - minimal to prevent overlap), Horizontal gap: 0.217in */
     padding: 0.552in 0 0 0.276in !important; /* top: 14mm (0.552in - added 7mm more), left: 7mm (0.276in) - ensures margins on all pages */
     box-sizing: border-box !important;
     page-break-after: always !important;
