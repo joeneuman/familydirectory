@@ -3,10 +3,26 @@
     <nav v-if="isAuthenticated" class="bg-white shadow-sm border-b sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center min-h-16 py-3">
-          <div class="flex items-center">
+          <div class="flex items-center relative" data-site-name-menu @mouseenter="currentUser && currentUser.is_admin ? showSiteNameMenu = true : null" @mouseleave="showSiteNameMenu = false">
             <router-link to="/directory" class="text-xl font-semibold text-gray-900">
-              Family Directory
+              {{ siteName }}
             </router-link>
+            <!-- Site Name Menu (only for admins) -->
+            <div
+              v-if="currentUser && currentUser.is_admin && showSiteNameMenu"
+              class="absolute left-0 top-full mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+              @mouseenter="showSiteNameMenu = true"
+              @mouseleave="showSiteNameMenu = false"
+            >
+              <div class="py-1">
+                <button
+                  @click="openEditSiteNameModal"
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Edit Site Name
+                </button>
+              </div>
+            </div>
           </div>
           
           <!-- Search, Filter, and Sort - only show on Directory page -->
@@ -143,20 +159,67 @@
                   >
                     Add Contact
                   </router-link>
-                  <router-link
-                    to="/print"
-                    @click="showMenu = false"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Print
-                  </router-link>
-                  <router-link
-                    to="/print/labels"
-                    @click="showMenu = false"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Address Labels
-                  </router-link>
+                  
+                  <!-- Print Menu with Submenus -->
+                  <div class="relative" @mouseenter="showPrintSubmenu = true" @mouseleave="showPrintSubmenu = false">
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                    >
+                      <span>Print</span>
+                      <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    <!-- Print Submenu -->
+                    <div
+                      v-if="showPrintSubmenu"
+                      class="absolute right-full top-0 mr-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                    >
+                      <div class="py-1">
+                        <router-link
+                          to="/print"
+                          @click="showMenu = false; showPrintSubmenu = false"
+                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Directory
+                        </router-link>
+                        
+                        <!-- Address Labels Submenu -->
+                        <div class="relative" @mouseenter="showLabelSubmenu = true" @mouseleave="showLabelSubmenu = false">
+                          <button
+                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                          >
+                            <span>Address Labels</span>
+                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          
+                          <!-- Label Type Submenu -->
+                          <div
+                            v-if="showLabelSubmenu"
+                            @mouseenter="showLabelSubmenu = true"
+                            @mouseleave="showLabelSubmenu = false"
+                            class="absolute left-0 top-full w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                            style="margin-top: -1px;"
+                          >
+                            <div class="py-1">
+                              <router-link
+                                to="/print/labels"
+                                @click="showMenu = false; showPrintSubmenu = false; showLabelSubmenu = false"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                Avery 5163/8163
+                              </router-link>
+                              <!-- Add more label types here as needed -->
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <button
                     @click="handleLogout"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -173,6 +236,43 @@
     <main>
       <router-view />
     </main>
+    
+    <!-- Edit Site Name Modal -->
+    <div
+      v-if="showEditSiteNameModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+      @click.self="showEditSiteNameModal = false"
+    >
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Site Name</h3>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+            <input
+              v-model="editSiteName"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter site name"
+              @keyup.enter="saveSiteName"
+            />
+          </div>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="showEditSiteNameModal = false"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              @click="saveSiteName"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -186,10 +286,34 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const showMenu = ref(false);
+const showPrintSubmenu = ref(false);
+const showLabelSubmenu = ref(false);
+const showSiteNameMenu = ref(false);
+const showEditSiteNameModal = ref(false);
 const menuContainer = ref(null);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUser = computed(() => authStore.currentUser);
 const isSmallScreen = ref(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+// Site name management
+const getSiteName = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('siteName') || 'Family Directory';
+  }
+  return 'Family Directory';
+};
+
+const siteName = ref(getSiteName());
+const editSiteName = ref('');
+
+// Watch for changes to site name in localStorage (for cross-tab updates)
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'siteName') {
+      siteName.value = e.newValue || 'Family Directory';
+    }
+  });
+}
 
 // Directory controls state (shared with Directory component)
 // Persist view selection in localStorage
@@ -280,12 +404,41 @@ watch(showSearchModal, (isOpen) => {
 // Close menu when route changes
 watch(() => route.path, () => {
   showMenu.value = false;
+  showPrintSubmenu.value = false;
+  showLabelSubmenu.value = false;
 });
 
 function handleLogout() {
   showMenu.value = false;
   authStore.logout();
   router.push('/login');
+}
+
+function saveSiteName() {
+  // Double-check admin status before saving
+  if (!currentUser.value || !currentUser.value.is_admin) {
+    console.error('Only admins can edit the site name');
+    showEditSiteNameModal.value = false;
+    return;
+  }
+  
+  if (editSiteName.value.trim()) {
+    siteName.value = editSiteName.value.trim();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('siteName', siteName.value);
+    }
+    showEditSiteNameModal.value = false;
+    editSiteName.value = '';
+  }
+}
+
+function openEditSiteNameModal() {
+  // Check admin status before opening modal
+  if (!currentUser.value || !currentUser.value.is_admin) {
+    return;
+  }
+  editSiteName.value = siteName.value;
+  showEditSiteNameModal.value = true;
 }
 
 // Click outside to close menu and initialize
@@ -301,6 +454,13 @@ onMounted(() => {
   document.addEventListener('click', (event) => {
     if (menuContainer.value && !menuContainer.value.contains(event.target)) {
       showMenu.value = false;
+      showPrintSubmenu.value = false;
+      showLabelSubmenu.value = false;
+    }
+    // Close site name menu if clicking outside
+    const siteNameElement = event.target.closest('[data-site-name-menu]');
+    if (!siteNameElement) {
+      showSiteNameMenu.value = false;
     }
   });
   

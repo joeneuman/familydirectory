@@ -41,14 +41,6 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                <input
-                  v-model="formData.full_name"
-                  type="text"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
                 <label class="block text-sm font-medium text-gray-700">Generation</label>
                 <input
                   v-model="formData.generation"

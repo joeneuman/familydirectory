@@ -32,26 +32,32 @@
       <div class="text-gray-600">No households with addresses found.</div>
     </div>
 
-    <!-- Label Sheet -->
-    <div v-else class="label-sheet">
+    <!-- Label Sheets -->
+    <div v-else>
       <div
-        v-for="(label, index) in labelData"
-        :key="index"
-        class="label"
+        v-for="(sheet, sIndex) in sheetedLabels"
+        :key="sIndex"
+        class="label-sheet"
       >
-        <div class="label-content">
-          <!-- Names: Head and Spouse -->
-          <div class="label-name">
-            {{ label.names }}
-          </div>
-          <!-- Address -->
-          <div class="label-address">
-            <div v-if="label.address_line1">{{ label.address_line1 }}</div>
-            <div v-if="label.address_line2">{{ label.address_line2 }}</div>
-            <div v-if="label.city || label.state || label.postal_code">
-              <span v-if="label.city">{{ label.city }}</span><span v-if="label.city && label.state">, </span>
-              <span v-if="label.state">{{ label.state }}</span><span v-if="label.state && label.postal_code">&nbsp;&nbsp;</span>
-              <span v-if="label.postal_code">{{ label.postal_code }}</span>
+        <div
+          v-for="(label, index) in sheet"
+          :key="index"
+          class="label"
+        >
+          <div class="label-content">
+            <!-- Names: Head and Spouse -->
+            <div class="label-name">
+              {{ label.names }}
+            </div>
+            <!-- Address -->
+            <div class="label-address">
+              <div v-if="label.address_line1">{{ label.address_line1 }}</div>
+              <div v-if="label.address_line2">{{ label.address_line2 }}</div>
+              <div v-if="label.city || label.state || label.postal_code">
+                <span v-if="label.city">{{ label.city }}</span><span v-if="label.city && label.state">, </span>
+                <span v-if="label.state">{{ label.state }}</span><span v-if="label.state && label.postal_code">&nbsp;&nbsp;</span>
+                <span v-if="label.postal_code">{{ label.postal_code }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -61,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { getApiBaseURL } from '../utils/api.js';
 
@@ -69,6 +75,16 @@ const loading = ref(true);
 const households = ref([]);
 const persons = ref([]);
 const labelData = ref([]);
+
+// Group labels into sheets of 10 (2 columns x 5 rows)
+const sheetedLabels = computed(() => {
+  const perSheet = 10; // 2 x 5
+  const sheets = [];
+  for (let i = 0; i < labelData.value.length; i += perSheet) {
+    sheets.push(labelData.value.slice(i, i + perSheet));
+  }
+  return sheets;
+});
 
 // Fetch all households and persons
 async function fetchData() {
@@ -313,19 +329,16 @@ onMounted(() => {
     background: white !important;
   }
   
-  /* Set page margins for all pages (ensures consistent top spacing on all pages including subsequent ones) */
-  /* Using page margin instead of padding ensures spacing works correctly on page breaks */
+  /* Set page margins to 0 - all spacing handled by label-sheet padding for consistency */
   @page {
-    margin: 0.276in 0.171in 0 0.276in !important; /* top: 7mm (0.276in), right: 0.171in, bottom: 0, left: 7mm (0.276in) */
     size: 8.5in 11in;
+    margin: 0 !important; /* no extra top margin - all offset handled by label-sheet padding */
   }
   
   /* Label sheet layout for Avery 5163/8163 */
   /* 2 columns x 5 rows = 10 labels per sheet */
-  /* Each label: 2" x 4" */
   /* Sheet: 8.5" x 11" */
-  /* Gap: 0.138in vertical, 0.296in horizontal (spacing between labels - reduced by 2mm/0.079in from previous) */
-  /* Using @page margins for page spacing instead of padding */
+  /* Each sheet gets its own page with consistent padding */
   
   .label-sheet {
     width: 8.5in !important;
@@ -333,12 +346,17 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.01in 0.217in !important; /* Vertical gap: 0.01in (reduced by 3mm/0.118in - minimal to prevent overlap), Horizontal gap: 0.217in */
-    padding: 0.552in 0 0 0.276in !important; /* top: 14mm (0.552in - added 7mm more), left: 7mm (0.276in) - ensures margins on all pages */
+    gap: 0.01in 0.217in !important; /* Vertical gap: 0.01in, Horizontal gap: 0.217in */
+    padding: 0.552in 0 0 0.276in !important; /* fixed offset from top/left - consistent on every page */
     box-sizing: border-box !important;
-    page-break-after: always !important;
     margin: 0 !important;
     max-width: 100% !important;
+    page-break-after: always !important; /* each sheet = new physical page */
+  }
+  
+  /* Last sheet doesn't need a page break after it */
+  .label-sheet:last-of-type {
+    page-break-after: auto !important;
   }
   
   .label {

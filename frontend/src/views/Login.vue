@@ -3,7 +3,7 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Family Directory
+          {{ siteName }}
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
           Enter your email to receive a login link
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { getApiBaseURL } from '../utils/api.js';
@@ -56,12 +56,41 @@ const message = ref('');
 const messageType = ref('');
 const loading = ref(false);
 
+// Site name management
+const getSiteName = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('siteName') || 'Family Directory';
+  }
+  return 'Family Directory';
+};
+
+const siteName = ref(getSiteName());
+
+// Watch for changes to site name in localStorage (for cross-tab updates)
+let storageListener = null;
+if (typeof window !== 'undefined') {
+  storageListener = (e) => {
+    if (e.key === 'siteName') {
+      siteName.value = e.newValue || 'Family Directory';
+    }
+  };
+  window.addEventListener('storage', storageListener);
+}
+
 // Check for error query parameters on mount
 onMounted(() => {
   const error = route.query.error;
   if (error === 'link_expired') {
     message.value = 'This login link has expired. Please request a new one.';
     messageType.value = 'error';
+  }
+  // Update site name on mount in case it changed
+  siteName.value = getSiteName();
+});
+
+onUnmounted(() => {
+  if (storageListener && typeof window !== 'undefined') {
+    window.removeEventListener('storage', storageListener);
   }
 });
 
