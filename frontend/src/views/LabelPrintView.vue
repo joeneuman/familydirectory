@@ -316,7 +316,7 @@ onMounted(() => {
   /* Set page margins for all pages (ensures consistent top spacing on all pages including subsequent ones) */
   /* Using page margin instead of padding ensures spacing works correctly on page breaks */
   @page {
-    margin: 0.421in 0.171in 0 0.171in !important; /* top: 0.421in (reduced 2mm), right: 0.171in (reduced 2mm), bottom: 0, left: 0.171in (reduced 2mm) */
+    margin: 0.276in 0.171in 0 0.276in !important; /* top: 7mm (0.276in), right: 0.171in, bottom: 0, left: 7mm (0.276in) */
     size: 8.5in 11in;
   }
   
@@ -324,8 +324,8 @@ onMounted(() => {
   /* 2 columns x 5 rows = 10 labels per sheet */
   /* Each label: 2" x 4" */
   /* Sheet: 8.5" x 11" */
-  /* Gap: 0.217in vertical, 0.375in horizontal (spacing between labels - reduced by 5mm from previous) */
-  /* Padding reduced by 2mm (0.079in) on all sides - using @page margins for spacing instead */
+  /* Gap: 0.138in vertical, 0.296in horizontal (spacing between labels - reduced by 2mm/0.079in from previous) */
+  /* Using @page margins for page spacing instead of padding */
   
   .label-sheet {
     width: 8.5in !important;
@@ -333,7 +333,7 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.217in 0.375in !important; /* Vertical gap: 0.217in, Horizontal gap: 0.375in (reduced by 5mm/0.197in from each) */
+    gap: 0.138in 0.296in !important; /* Vertical gap: 0.138in, Horizontal gap: 0.296in (reduced by 2mm/0.079in from each) */
     padding: 0 !important; /* No padding - using @page margins for spacing to ensure consistent spacing on all pages */
     box-sizing: border-box !important;
     page-break-after: always !important;
