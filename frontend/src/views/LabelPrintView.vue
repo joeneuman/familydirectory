@@ -333,8 +333,8 @@ onMounted(() => {
     display: grid !important;
     grid-template-columns: repeat(2, 4in) !important;
     grid-template-rows: repeat(5, 2in) !important;
-    gap: 0.138in 0.296in !important; /* Vertical gap: 0.138in, Horizontal gap: 0.296in (reduced by 2mm/0.079in from each) */
-    padding: 0.276in 0 0 0.276in !important; /* top: 7mm (0.276in), left: 7mm (0.276in) - ensures margins on all pages */
+    gap: 0.059in 0.217in !important; /* Vertical gap: 0.059in, Horizontal gap: 0.217in (reduced by 2mm/0.079in from previous) */
+    padding: 0.552in 0 0 0.276in !important; /* top: 14mm (0.552in - added 7mm more), left: 7mm (0.276in) - ensures margins on all pages */
     box-sizing: border-box !important;
     page-break-after: always !important;
     margin: 0 !important;
