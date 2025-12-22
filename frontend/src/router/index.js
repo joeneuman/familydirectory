@@ -51,6 +51,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/print/options',
+    name: 'PrintOptionsView',
+    component: () => import('../views/PrintOptionsView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/print',
     name: 'PrintView',
     component: PrintView,
@@ -60,6 +66,18 @@ const routes = [
     path: '/print/labels',
     name: 'LabelPrintView',
     component: LabelPrintView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/print/labels/5160',
+    name: 'LabelPrintView5160',
+    component: () => import('../views/LabelPrintView5160.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/print/envelopes',
+    name: 'EnvelopePrintView',
+    component: () => import('../views/EnvelopePrintView.vue'),
     meta: { requiresAuth: true },
   },
   {

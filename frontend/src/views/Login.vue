@@ -56,25 +56,18 @@ const message = ref('');
 const messageType = ref('');
 const loading = ref(false);
 
-// Site name management
-const getSiteName = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('siteName') || 'Family Directory';
+// Site name management - fetch from API
+const siteName = ref('Family Directory');
+
+// Fetch site name from API
+async function fetchSiteName() {
+  try {
+    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
+    siteName.value = response.data.siteName || 'Family Directory';
+  } catch (error) {
+    console.error('Error fetching site name:', error);
+    siteName.value = 'Family Directory';
   }
-  return 'Family Directory';
-};
-
-const siteName = ref(getSiteName());
-
-// Watch for changes to site name in localStorage (for cross-tab updates)
-let storageListener = null;
-if (typeof window !== 'undefined') {
-  storageListener = (e) => {
-    if (e.key === 'siteName') {
-      siteName.value = e.newValue || 'Family Directory';
-    }
-  };
-  window.addEventListener('storage', storageListener);
 }
 
 // Check for error query parameters on mount
@@ -84,14 +77,8 @@ onMounted(() => {
     message.value = 'This login link has expired. Please request a new one.';
     messageType.value = 'error';
   }
-  // Update site name on mount in case it changed
-  siteName.value = getSiteName();
-});
-
-onUnmounted(() => {
-  if (storageListener && typeof window !== 'undefined') {
-    window.removeEventListener('storage', storageListener);
-  }
+  // Fetch site name from API
+  fetchSiteName();
 });
 
 async function handleSubmit() {

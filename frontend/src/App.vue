@@ -57,15 +57,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-            <button
-              @click="showDirectoryFilterModal = true"
-              class="filter-btn px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center gap-1 sm:gap-2 text-sm flex-shrink-0"
-            >
-              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span class="hidden sm:inline">Filter</span>
-            </button>
             <select
               :value="directorySortBy"
               @change="updateDirectorySort($event.target.value)"
@@ -78,6 +69,15 @@
               <option value="age_desc">Oldest</option>
               <option value="generation">Generation</option>
             </select>
+            <button
+              @click="showDirectoryFilterModal = true"
+              class="filter-btn px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center gap-1 sm:gap-2 text-sm flex-shrink-0"
+            >
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span class="hidden sm:inline">Filter</span>
+            </button>
           </div>
           
           <!-- Search Bar - Overlay at top -->
@@ -160,65 +160,13 @@
                     Add Contact
                   </router-link>
                   
-                  <!-- Print Menu with Submenus -->
-                  <div class="relative" @mouseenter="showPrintSubmenu = true" @mouseleave="showPrintSubmenu = false">
-                    <button
-                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                    >
-                      <span>Print</span>
-                      <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    
-                    <!-- Print Submenu -->
-                    <div
-                      v-if="showPrintSubmenu"
-                      class="absolute right-full top-0 mr-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                    >
-                      <div class="py-1">
-                        <router-link
-                          to="/print"
-                          @click="showMenu = false; showPrintSubmenu = false"
-                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Directory
-                        </router-link>
-                        
-                        <!-- Address Labels Submenu -->
-                        <div class="relative" @mouseenter="showLabelSubmenu = true" @mouseleave="showLabelSubmenu = false">
-                          <button
-                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                          >
-                            <span>Address Labels</span>
-                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          
-                          <!-- Label Type Submenu -->
-                          <div
-                            v-if="showLabelSubmenu"
-                            @mouseenter="showLabelSubmenu = true"
-                            @mouseleave="showLabelSubmenu = false"
-                            class="absolute left-0 top-full w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                            style="margin-top: -1px;"
-                          >
-                            <div class="py-1">
-                              <router-link
-                                to="/print/labels"
-                                @click="showMenu = false; showPrintSubmenu = false; showLabelSubmenu = false"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                Avery 5163/8163
-                              </router-link>
-                              <!-- Add more label types here as needed -->
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <router-link
+                    to="/print/options"
+                    @click="showMenu = false"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Print
+                  </router-link>
                   
                   <button
                     @click="handleLogout"
@@ -280,14 +228,14 @@
 import { ref, computed, onMounted, watch, provide, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
+import axios from 'axios';
+import { getApiBaseURL } from './utils/api.js';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
 const showMenu = ref(false);
-const showPrintSubmenu = ref(false);
-const showLabelSubmenu = ref(false);
 const showSiteNameMenu = ref(false);
 const showEditSiteNameModal = ref(false);
 const menuContainer = ref(null);
@@ -295,24 +243,19 @@ const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUser = computed(() => authStore.currentUser);
 const isSmallScreen = ref(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
-// Site name management
-const getSiteName = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('siteName') || 'Family Directory';
-  }
-  return 'Family Directory';
-};
-
-const siteName = ref(getSiteName());
+// Site name management - fetch from API
+const siteName = ref('Family Directory');
 const editSiteName = ref('');
 
-// Watch for changes to site name in localStorage (for cross-tab updates)
-if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'siteName') {
-      siteName.value = e.newValue || 'Family Directory';
-    }
-  });
+// Fetch site name from API
+async function fetchSiteName() {
+  try {
+    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
+    siteName.value = response.data.siteName || 'Family Directory';
+  } catch (error) {
+    console.error('Error fetching site name:', error);
+    siteName.value = 'Family Directory';
+  }
 }
 
 // Directory controls state (shared with Directory component)
@@ -404,8 +347,6 @@ watch(showSearchModal, (isOpen) => {
 // Close menu when route changes
 watch(() => route.path, () => {
   showMenu.value = false;
-  showPrintSubmenu.value = false;
-  showLabelSubmenu.value = false;
 });
 
 function handleLogout() {
@@ -414,7 +355,7 @@ function handleLogout() {
   router.push('/login');
 }
 
-function saveSiteName() {
+async function saveSiteName() {
   // Double-check admin status before saving
   if (!currentUser.value || !currentUser.value.is_admin) {
     console.error('Only admins can edit the site name');
@@ -423,12 +364,17 @@ function saveSiteName() {
   }
   
   if (editSiteName.value.trim()) {
-    siteName.value = editSiteName.value.trim();
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('siteName', siteName.value);
+    try {
+      await axios.post(`${getApiBaseURL()}/settings/site-name`, {
+        value: editSiteName.value.trim()
+      });
+      siteName.value = editSiteName.value.trim();
+      showEditSiteNameModal.value = false;
+      editSiteName.value = '';
+    } catch (error) {
+      console.error('Error saving site name:', error);
+      alert('Failed to save site name. Please try again.');
     }
-    showEditSiteNameModal.value = false;
-    editSiteName.value = '';
   }
 }
 
@@ -454,8 +400,6 @@ onMounted(() => {
   document.addEventListener('click', (event) => {
     if (menuContainer.value && !menuContainer.value.contains(event.target)) {
       showMenu.value = false;
-      showPrintSubmenu.value = false;
-      showLabelSubmenu.value = false;
     }
     // Close site name menu if clicking outside
     const siteNameElement = event.target.closest('[data-site-name-menu]');
@@ -470,6 +414,9 @@ onMounted(() => {
       console.error('Failed to fetch current user:', error);
     });
   }
+  
+  // Fetch site name from API
+  fetchSiteName();
 });
 </script>
 

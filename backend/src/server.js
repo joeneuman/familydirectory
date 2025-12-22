@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import householdsRoutes from './routes/households.js';
 import personsRoutes from './routes/persons.js';
 import preferencesRoutes from './routes/preferences.js';
+import settingsRoutes from './routes/settings.js';
 import uploadRoutes from './routes/upload.js';
 import { MagicLinkToken } from './models/MagicLinkToken.js';
 
@@ -74,6 +75,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/households', householdsRoutes);
 app.use('/api/persons', personsRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Health check

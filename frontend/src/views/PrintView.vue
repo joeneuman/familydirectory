@@ -1,20 +1,16 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-6 flex justify-between items-center no-print">
-      <h1 class="text-2xl font-bold text-gray-900">Family Directory - Print View</h1>
-      <div class="flex gap-3">
-        <button
-          @click="handlePrint"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-        >
-          Print
-        </button>
-        <button
-          @click="$router.push('/directory')"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-        >
-          Back to Directory
-        </button>
+    <div class="mb-6 no-print">
+      <div class="flex justify-between items-center mb-3">
+        <h1 class="text-2xl font-bold text-gray-900">Family Directory - Print View</h1>
+        <div class="flex gap-3">
+          <button
+            @click="handlePrint"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Print
+          </button>
+        </div>
       </div>
     </div>
 
@@ -22,7 +18,13 @@
       <div class="text-gray-600">Loading...</div>
     </div>
 
-    <div v-else class="space-y-4">
+    <div v-else>
+      <!-- Print Title (only visible when printing) -->
+      <div class="print-only text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">{{ siteName }}</h1>
+      </div>
+
+      <div class="space-y-4">
       <!-- Grouped by Household (matching Directory view formatting) -->
       <template v-for="(item, index) in allHouseholdsSorted" :key="item.type === 'household' ? item.household.id : `individual-${item.person.id}`">
         <!-- Regular household -->
@@ -151,6 +153,7 @@
           </template>
         </template>
       </template>
+      </div>
     </div>
   </div>
 </template>
@@ -164,6 +167,20 @@ import { format } from 'date-fns';
 const households = ref([]);
 const persons = ref([]);
 const loading = ref(true);
+
+// Site name management - fetch from API
+const siteName = ref('Family Directory');
+
+// Fetch site name from API
+async function fetchSiteName() {
+  try {
+    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
+    siteName.value = response.data.siteName || 'Family Directory';
+  } catch (error) {
+    console.error('Error fetching site name:', error);
+    siteName.value = 'Family Directory';
+  }
+}
 
 /**
  * Parse a date string in a timezone-agnostic way
@@ -410,13 +427,23 @@ function handlePrint() {
 
 onMounted(() => {
   fetchData();
+  // Fetch site name from API
+  fetchSiteName();
 });
 </script>
 
 <style scoped>
+.print-only {
+  display: none;
+}
+
 @media print {
   .no-print {
     display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
   }
   
   .page-break-inside-avoid {
