@@ -74,13 +74,32 @@ cd "$BACKEND_DIR"
 
 # Check if there are uncommitted changes
 if [ -n "$(git status --porcelain)" ]; then
-    echo -e "${YELLOW}Warning: Uncommitted changes detected. They will be preserved but may cause conflicts.${NC}"
+    echo -e "${YELLOW}Warning: Uncommitted changes detected.${NC}"
     git status --short
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${RED}Deployment cancelled.${NC}"
-        exit 1
+    
+    # Check if deploy-to-production.sh (in parent directory) has local changes
+    # The git repo is in backend, so the script is at ../deploy-to-production.sh
+    if git diff --quiet ../deploy-to-production.sh 2>/dev/null; then
+        # No changes to deploy script, but other changes exist
+        read -p "Continue anyway? (y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Deployment cancelled.${NC}"
+            exit 1
+        fi
+    else
+        # Deploy script has local changes - reset it to match remote
+        echo -e "${YELLOW}Local changes to deploy-to-production.sh detected.${NC}"
+        echo -e "${YELLOW}Resetting deploy script to match remote version...${NC}"
+        git checkout -- ../deploy-to-production.sh 2>/dev/null || {
+            echo -e "${YELLOW}Could not reset deploy script automatically.${NC}"
+            read -p "Continue anyway? (y/n) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo -e "${RED}Deployment cancelled.${NC}"
+                exit 1
+            fi
+        }
     fi
 fi
 
@@ -113,16 +132,34 @@ done
 
 # Step 3: Pull latest changes
 echo -e "${YELLOW}Step 3: Pulling latest changes from GitHub...${NC}"
-# Try to pull, and if it fails due to untracked files, remove them and retry
-if ! git pull origin master 2>&1 | tee /tmp/git-pull-output.log; then
+# Try to pull, and if it fails, handle conflicts
+PULL_OUTPUT=$(git pull origin master 2>&1)
+PULL_EXIT_CODE=$?
+
+if [ $PULL_EXIT_CODE -ne 0 ]; then
+    echo "$PULL_OUTPUT" | tee /tmp/git-pull-output.log
+    
     # Check if the error is about untracked files
-    if grep -q "untracked working tree files would be overwritten" /tmp/git-pull-output.log; then
+    if echo "$PULL_OUTPUT" | grep -q "untracked working tree files would be overwritten"; then
         echo -e "${YELLOW}Untracked files conflict detected. Removing conflicting files...${NC}"
         # Extract conflicting file names from the error message
-        grep "would be overwritten by merge:" /tmp/git-pull-output.log | sed 's/.*: *//' | while read -r file; do
+        echo "$PULL_OUTPUT" | grep "would be overwritten by merge:" | sed 's/.*: *//' | while read -r file; do
             if [ -f "$file" ]; then
                 echo -e "${YELLOW}Removing: $file${NC}"
                 rm -f "$file"
+            fi
+        done
+        # Try pull again
+        echo -e "${YELLOW}Retrying git pull...${NC}"
+        git pull origin master
+    # Check if the error is about local changes to tracked files
+    elif echo "$PULL_OUTPUT" | grep -q "Your local changes to the following files would be overwritten by merge"; then
+        echo -e "${YELLOW}Local changes to tracked files detected. Resetting conflicting files...${NC}"
+        # Extract file names from error (they appear after the error message)
+        echo "$PULL_OUTPUT" | grep -A 20 "would be overwritten by merge:" | grep -v "would be overwritten" | grep -v "^--" | sed 's/^[[:space:]]*//' | grep -v "^$" | while read -r file; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+                echo -e "${YELLOW}Resetting: $file${NC}"
+                git checkout -- "$file" 2>/dev/null || true
             fi
         done
         # Try pull again
@@ -132,6 +169,8 @@ if ! git pull origin master 2>&1 | tee /tmp/git-pull-output.log; then
         echo -e "${RED}Git pull failed for a different reason. Check the output above.${NC}"
         exit 1
     fi
+else
+    echo "$PULL_OUTPUT"
 fi
 rm -f /tmp/git-pull-output.log
 
