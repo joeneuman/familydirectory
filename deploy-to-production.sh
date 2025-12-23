@@ -102,7 +102,8 @@ fi
 echo -e "${YELLOW}Step 2: Checking for conflicting untracked files...${NC}"
 # Remove common generated files that might conflict with incoming changes
 # These are typically export files that shouldn't be in git anyway
-CONFLICTING_FILES="database-export.sql backend/database-export.sql"
+# Note: We're in BACKEND_DIR, so paths are relative to backend/
+CONFLICTING_FILES="database-export.sql"
 for file in $CONFLICTING_FILES; do
     if [ -f "$file" ]; then
         echo -e "${YELLOW}Removing generated file that may conflict: $file${NC}"
