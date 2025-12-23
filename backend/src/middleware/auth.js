@@ -23,6 +23,7 @@ export function authenticateToken(req, res, next) {
     req.user = {
       id: decoded.personId,
       email: decoded.email,
+      is_admin: person.is_admin || false,
     };
     next();
   });

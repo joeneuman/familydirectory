@@ -1,28 +1,12 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
-    <nav v-if="isAuthenticated" class="bg-white shadow-sm border-b sticky top-0 z-40">
+  <div id="app" class="min-h-screen bg-warm-50">
+    <nav v-if="isAuthenticated" class="bg-white shadow-soft border-b border-soft-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center min-h-16 py-3">
-          <div class="flex items-center relative" data-site-name-menu @mouseenter="currentUser && currentUser.is_admin ? showSiteNameMenu = true : null" @mouseleave="showSiteNameMenu = false">
-            <router-link to="/directory" class="text-xl font-semibold text-gray-900">
+        <div class="flex justify-between items-center min-h-16 py-4">
+          <div class="flex items-center">
+            <router-link to="/directory" class="text-2xl font-bold text-warm-700 hover:text-warm-600 transition-colors duration-200">
               {{ siteName }}
             </router-link>
-            <!-- Site Name Menu (only for admins) -->
-            <div
-              v-if="currentUser && currentUser.is_admin && showSiteNameMenu"
-              class="absolute left-0 top-full mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-              @mouseenter="showSiteNameMenu = true"
-              @mouseleave="showSiteNameMenu = false"
-            >
-              <div class="py-1">
-                <button
-                  @click="openEditSiteNameModal"
-                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Edit Site Name
-                </button>
-              </div>
-            </div>
           </div>
           
           <!-- Search, Filter, and Sort - only show on Directory page -->
@@ -34,7 +18,7 @@
                 @input="updateDirectorySearch($event.target.value)"
                 type="text"
                 placeholder="Search by name, email, or phone..."
-                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                class="input-field text-sm pr-10"
               />
               <!-- Clear button (X) - only show when there's text -->
               <button
@@ -51,7 +35,7 @@
             <!-- Search Icon Button - shows on small screens -->
             <button
               @click="toggleSearchModal"
-              class="lg:hidden px-2 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-center flex-shrink-0"
+              class="lg:hidden px-3 py-2 border border-soft-200 rounded-xl hover:bg-warm-50 focus:ring-2 focus:ring-warm-400 focus:border-warm-400 flex items-center justify-center flex-shrink-0 transition-all duration-200"
             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -60,7 +44,7 @@
             <select
               :value="directorySortBy"
               @change="updateDirectorySort($event.target.value)"
-              class="sort-dropdown border border-gray-300 rounded-md text-sm appearance-none bg-white inline-flex items-center focus:ring-indigo-500 focus:border-indigo-500"
+              class="sort-dropdown border border-soft-200 rounded-xl text-sm appearance-none bg-white inline-flex items-center focus:ring-2 focus:ring-warm-400 focus:border-warm-400 px-4 py-2 transition-all duration-200 hover:bg-warm-50"
             >
               <option value="name">Name (A-Z)</option>
               <option value="household">Household</option>
@@ -71,7 +55,7 @@
             </select>
             <button
               @click="showDirectoryFilterModal = true"
-              class="filter-btn px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 flex items-center gap-1 sm:gap-2 text-sm flex-shrink-0"
+              class="filter-btn px-3 sm:px-4 py-2 border border-soft-200 rounded-xl hover:bg-warm-50 focus:ring-2 focus:ring-warm-400 focus:border-warm-400 flex items-center gap-1 sm:gap-2 text-sm flex-shrink-0 transition-all duration-200"
             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -83,7 +67,7 @@
           <!-- Search Bar - Overlay at top -->
           <div
             v-if="showSearchModal"
-            class="fixed top-0 left-0 right-0 bg-white border-b border-gray-300 shadow-lg z-50 p-4"
+            class="fixed top-0 left-0 right-0 bg-white border-b border-soft-200 shadow-soft-lg z-50 p-4 backdrop-blur-sm bg-white/98"
           >
             <div class="max-w-7xl mx-auto flex items-center gap-3">
               <div class="flex-1 relative">
@@ -93,7 +77,7 @@
                   @input="updateDirectorySearch($event.target.value)"
                   type="text"
                   placeholder="Search by name, email, or phone..."
-                  class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                  class="input-field text-base pr-10"
                 />
                 <!-- Clear button (X) - only show when there's text -->
                 <button
@@ -125,7 +109,7 @@
             <div class="relative" v-if="currentUser" ref="menuContainer">
               <button
                 @click.stop="showMenu = !showMenu"
-                class="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md px-3 py-2"
+                class="flex items-center text-soft-700 hover:text-warm-700 focus:outline-none focus:ring-2 focus:ring-warm-400 focus:ring-offset-2 rounded-xl px-4 py-2 transition-all duration-200 font-medium"
               >
                 <span class="font-medium">
                   {{ currentUser.full_name || `${currentUser.first_name} ${currentUser.last_name}` }}
@@ -148,29 +132,38 @@
               <!-- Dropdown Menu -->
               <div
                 v-if="showMenu"
-                class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                class="absolute right-0 mt-2 w-48 rounded-xl shadow-soft-lg bg-white border border-soft-200 z-50 overflow-hidden"
               >
                 <div class="py-1">
                   <router-link
                     v-if="currentUser && currentUser.is_admin"
                     to="/person/new"
                     @click="showMenu = false"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block px-4 py-2.5 text-sm text-soft-700 hover:bg-warm-50 hover:text-warm-700 transition-colors duration-150"
                   >
                     Add Contact
                   </router-link>
                   
                   <router-link
+                    v-if="currentUser && currentUser.is_admin"
+                    to="/settings"
+                    @click="showMenu = false"
+                    class="block px-4 py-2.5 text-sm text-soft-700 hover:bg-warm-50 hover:text-warm-700 transition-colors duration-150"
+                  >
+                    Settings
+                  </router-link>
+                  
+                  <router-link
                     to="/print/options"
                     @click="showMenu = false"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block px-4 py-2.5 text-sm text-soft-700 hover:bg-warm-50 hover:text-warm-700 transition-colors duration-150"
                   >
                     Print
                   </router-link>
                   
                   <button
                     @click="handleLogout"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block w-full text-left px-4 py-2.5 text-sm text-soft-700 hover:bg-warm-50 hover:text-warm-700 transition-colors duration-150"
                   >
                     Logout
                   </button>
@@ -184,43 +177,6 @@
     <main>
       <router-view />
     </main>
-    
-    <!-- Edit Site Name Modal -->
-    <div
-      v-if="showEditSiteNameModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-      @click.self="showEditSiteNameModal = false"
-    >
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Site Name</h3>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
-            <input
-              v-model="editSiteName"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Enter site name"
-              @keyup.enter="saveSiteName"
-            />
-          </div>
-          <div class="flex justify-end gap-3">
-            <button
-              @click="showEditSiteNameModal = false"
-              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-            <button
-              @click="saveSiteName"
-              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -236,8 +192,6 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const showMenu = ref(false);
-const showSiteNameMenu = ref(false);
-const showEditSiteNameModal = ref(false);
 const menuContainer = ref(null);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUser = computed(() => authStore.currentUser);
@@ -245,7 +199,6 @@ const isSmallScreen = ref(typeof window !== 'undefined' ? window.innerWidth < 64
 
 // Site name management - fetch from API
 const siteName = ref('Family Directory');
-const editSiteName = ref('');
 
 // Fetch site name from API
 async function fetchSiteName() {
@@ -355,37 +308,6 @@ function handleLogout() {
   router.push('/login');
 }
 
-async function saveSiteName() {
-  // Double-check admin status before saving
-  if (!currentUser.value || !currentUser.value.is_admin) {
-    console.error('Only admins can edit the site name');
-    showEditSiteNameModal.value = false;
-    return;
-  }
-  
-  if (editSiteName.value.trim()) {
-    try {
-      await axios.post(`${getApiBaseURL()}/settings/site-name`, {
-        value: editSiteName.value.trim()
-      });
-      siteName.value = editSiteName.value.trim();
-      showEditSiteNameModal.value = false;
-      editSiteName.value = '';
-    } catch (error) {
-      console.error('Error saving site name:', error);
-      alert('Failed to save site name. Please try again.');
-    }
-  }
-}
-
-function openEditSiteNameModal() {
-  // Check admin status before opening modal
-  if (!currentUser.value || !currentUser.value.is_admin) {
-    return;
-  }
-  editSiteName.value = siteName.value;
-  showEditSiteNameModal.value = true;
-}
 
 // Click outside to close menu and initialize
 onMounted(() => {
@@ -401,11 +323,6 @@ onMounted(() => {
     if (menuContainer.value && !menuContainer.value.contains(event.target)) {
       showMenu.value = false;
     }
-    // Close site name menu if clicking outside
-    const siteNameElement = event.target.closest('[data-site-name-menu]');
-    if (!siteNameElement) {
-      showSiteNameMenu.value = false;
-    }
   });
   
   // Fetch current user if authenticated
@@ -417,6 +334,13 @@ onMounted(() => {
   
   // Fetch site name from API
   fetchSiteName();
+});
+
+// Watch for route changes to refresh site name when leaving Settings page
+watch(() => route.path, (newPath, oldPath) => {
+  if (oldPath === '/settings' && newPath !== '/settings') {
+    fetchSiteName();
+  }
 });
 </script>
 

@@ -3,15 +3,15 @@
 
     <!-- People List -->
     <div v-if="loading" class="text-center py-12">
-      <div class="text-gray-600">Loading...</div>
+      <div class="text-soft-600">Loading...</div>
     </div>
 
     <div v-else-if="sortBy !== 'next_event' && ((sortBy === 'household' && householdsWithMembers.length === 0 && personsWithoutHousehold.length === 0) || (sortBy !== 'household' && filteredPersons.length === 0))" class="text-center py-12">
-      <div class="text-gray-600">No people found</div>
+      <div class="text-soft-600">No people found</div>
     </div>
 
     <div v-else-if="sortBy === 'next_event' && scheduleView.length === 0" class="text-center py-12">
-      <div class="text-gray-600">No upcoming events in the next 12 months</div>
+      <div class="text-soft-600">No upcoming events in the next 12 months</div>
     </div>
 
     <div v-else class="space-y-4">
@@ -23,8 +23,8 @@
           class="mb-6"
         >
           <!-- Date Card -->
-          <div class="bg-white rounded-lg shadow-sm border-2 border-gray-300 p-4">
-            <h3 class="text-lg font-bold text-gray-900 mb-3">
+          <div class="card border-2 border-warm-200">
+            <h3 class="text-lg font-bold text-warm-700 mb-3">
               {{ formatScheduleDate(dateGroup.date) }}
             </h3>
             
@@ -33,7 +33,7 @@
               <div
                 v-for="event in dateGroup.events"
                 :key="event.id"
-                class="bg-gray-50 rounded-md p-3 border border-gray-200"
+                class="bg-warm-50 rounded-xl p-4 border border-warm-200 hover:bg-warm-100 transition-colors duration-200"
               >
                 <router-link :to="`/person/${event.personId}`" class="block">
                   <div class="flex items-start justify-between">
@@ -62,15 +62,15 @@
                         />
                       </div>
                       <div class="flex-1">
-                        <h4 class="font-semibold text-gray-900 mb-1">{{ event.name }}</h4>
+                        <h4 class="font-semibold text-soft-900 mb-1">{{ event.name }}</h4>
                         <!-- Show address if filter is on (full width) -->
-                        <div v-if="displayFilters.address && event.address" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                        <div v-if="displayFilters.address && event.address" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
                           {{ event.address }}
                         </div>
-                        <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                           <!-- Show birthday if it exists and filter allows -->
                           <div v-if="event.hasBirthday && displayFilters.birthday" class="flex items-center">
-                            <span class="font-medium text-indigo-600 mr-1">🎂 Birthday</span>
+                            <span class="font-medium text-warm-600 mr-1">🎂 Birthday</span>
                             <span v-if="event.birthdayAge !== null && event.birthdayAge !== undefined">({{ event.birthdayAge }} years old)</span>
                           </div>
                           <!-- Show anniversary if it exists and filter allows -->
@@ -84,13 +84,13 @@
                           <div v-if="displayFilters.email && event.email" class="flex items-center">
                             <span class="font-medium mr-1">Email:</span> {{ event.email }}
                           </div>
-                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
+                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
                             <span class="font-medium mr-1">Phone:</span> {{ event.phone }}
                           </a>
                         </div>
                       </div>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-soft-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -111,11 +111,11 @@
           <div class="mt-4">
             <!-- Household Members - Head of household first, with bold name and address -->
             <!-- Box container around household -->
-            <div class="border-t-4 border-l-4 border-r-4 border-gray-300">
+            <div class="border-4 border-warm-300 rounded-xl overflow-hidden">
               <div class="space-y-3 px-3 pt-3 pb-3">
                 <template v-for="(person, personIndex) in getSortedHouseholdMembers(household.id)" :key="person.id">
                   <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                    class="card hover:border-warm-300"
                   >
                   <router-link :to="`/person/${person.id}`" class="block">
                     <div class="flex items-start justify-between">
@@ -126,15 +126,15 @@
                       </div>
                       <div class="flex-1">
                         <!-- Bold name if head of household -->
-                        <h3 :class="isHeadOfHousehold(household.id, person.id) ? 'text-lg font-extrabold text-gray-900 mb-1' : 'text-lg font-semibold text-gray-900 mb-1'">
+                        <h3 :class="isHeadOfHousehold(household.id, person.id) ? 'text-lg font-extrabold text-warm-700 mb-1' : 'text-lg font-semibold text-soft-900 mb-1'">
                           {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                         </h3>
                         <!-- Show address only for head of household (full width) -->
-                        <div v-if="displayFilters.address && isHeadOfHousehold(household.id, person.id) && household.address" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                        <div v-if="displayFilters.address && isHeadOfHousehold(household.id, person.id) && household.address" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
                           {{ household.address }}
                         </div>
                         <!-- Horizontal layout for other fields -->
-                        <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                           <div v-if="displayFilters.generation && person.generation" class="flex items-center">
                             <span class="font-medium mr-1">Gen:</span> {{ person.generation }}
                           </div>
@@ -153,7 +153,7 @@
                           <div v-if="displayFilters.email && person.email" class="flex items-center">
                             <span class="font-medium mr-1">Email:</span> {{ person.email }}
                           </div>
-                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
+                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
                             <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                           </a>
                           <!-- Show household name for non-head members (if not hidden by privacy) -->
@@ -164,7 +164,7 @@
                         </div>
                       </div>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-soft-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -172,8 +172,6 @@
                   </div>
                 </template>
               </div>
-              <!-- Bottom border to close the box -->
-              <div class="border-b-4 border-gray-300"></div>
             </div>
           </div>
             </template>
@@ -184,7 +182,7 @@
             <template v-for="(person, personIndex) in [item.person]" :key="person.id">
             <!-- Box container around person without household -->
             <div class="mt-4">
-              <div class="border-t-4 border-l-4 border-r-4 border-gray-300">
+              <div class="border-4 border-warm-300 rounded-xl overflow-hidden">
                 <div class="px-3 pt-3 pb-3">
                   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                   <router-link :to="`/person/${person.id}`" class="block">
@@ -196,15 +194,15 @@
                         </div>
                         <div class="flex-1">
                           <!-- Bold name (they're their own head) -->
-                          <h3 class="text-lg font-extrabold text-gray-900 mb-1">
+                          <h3 class="text-lg font-extrabold text-warm-700 mb-1">
                             {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                           </h3>
                           <!-- Show address if they have one (full width) -->
-                          <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                          <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
                             {{ getPersonAddress(person) }}
                           </div>
                           <!-- Horizontal layout for other fields -->
-                          <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                          <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                             <div v-if="displayFilters.generation && person.generation" class="flex items-center">
                               <span class="font-medium mr-1">Gen:</span> {{ person.generation }}
                             </div>
@@ -223,21 +221,19 @@
                             <div v-if="displayFilters.email && person.email" class="flex items-center">
                               <span class="font-medium mr-1">Email:</span> {{ person.email }}
                             </div>
-                            <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
+                            <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
                               <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                             </a>
                           </div>
                         </div>
                       </div>
-                      <svg class="w-5 h-5 text-gray-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5 text-soft-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
                   </router-link>
                   </div>
                 </div>
-                <!-- Bottom border to close the box -->
-                <div class="border-b-4 border-gray-300"></div>
               </div>
             </div>
             </template>
@@ -245,12 +241,87 @@
         </template>
       </template>
 
+      <template v-else-if="sortBy === 'generation'">
+        <!-- Generation view with grouped frames -->
+        <div
+          v-for="genGroup in personsByGeneration"
+          :key="genGroup.generation"
+          class="mt-4"
+        >
+          <!-- Generation group container with border -->
+          <div class="border-4 border-warm-300 rounded-xl overflow-hidden">
+            <!-- Generation title -->
+            <div class="bg-warm-100 px-4 py-2 border-b-2 border-warm-300">
+              <h2 class="text-xl font-bold text-warm-700">{{ genGroup.generation }}</h2>
+            </div>
+            <!-- Generation members -->
+            <div class="space-y-3 px-3 pt-3 pb-3">
+              <div
+                v-for="person in genGroup.persons"
+                :key="person.id"
+                class="card hover:border-warm-300"
+              >
+                <router-link :to="`/person/${person.id}`" class="block">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1 flex items-start gap-3">
+                      <!-- Photo -->
+                      <div v-if="displayFilters.photo" class="flex-shrink-0">
+                        <img :src="getPhotoURL(person.photo_url, person.id)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-soft-900 mb-1">
+                          {{ person.full_name || `${person.first_name} ${person.last_name}` }}
+                        </h3>
+                        <!-- Show address if filter is on (full width) -->
+                        <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
+                          {{ getPersonAddress(person) }}
+                        </div>
+                        <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                          <div v-if="displayFilters.generation && person.generation" class="flex items-center">
+                            <span class="font-medium mr-1">Gen:</span> {{ person.generation }}
+                          </div>
+                          <div v-if="displayFilters.age && person.age !== null && person.age !== undefined" class="flex items-center">
+                            <span class="font-medium mr-1">Age:</span> {{ person.age }}
+                          </div>
+                          <div v-if="displayFilters.birthday && person.date_of_birth" class="flex items-center">
+                            <span class="font-medium mr-1">Bday:</span> {{ formatDateShort(person.date_of_birth) }}
+                          </div>
+                          <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
+                            <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
+                          </div>
+                          <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
+                            <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
+                          </div>
+                          <div v-if="displayFilters.email && person.email" class="flex items-center">
+                            <span class="font-medium mr-1">Email:</span> {{ person.email }}
+                          </div>
+                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
+                            <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
+                          </a>
+                          <div v-if="displayFilters.household_name && person.primary_household_id && !(person.privacy_settings && person.privacy_settings.household_name)" class="flex items-center">
+                            <span class="font-medium mr-1">Household:</span> 
+                            {{ getHeadOfHouseholdName(person.primary_household_id) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <svg class="w-5 h-5 text-soft-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
       <template v-else-if="sortBy !== 'next_event'">
-        <!-- Flat list when sorting or searching -->
+        <!-- Flat list when sorting or searching (non-generation views) -->
         <div
           v-for="person in filteredPersons"
           :key="person.id"
-          class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+          class="card hover:border-warm-300"
         >
           <router-link :to="`/person/${person.id}`" class="block">
               <div class="flex items-start justify-between">
@@ -260,14 +331,14 @@
                     <img :src="getPhotoURL(person.photo_url, person.id)" :alt="person.full_name || `${person.first_name} ${person.last_name}`" class="w-16 h-16 rounded-full object-cover" />
                   </div>
                   <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 class="text-lg font-semibold text-soft-900 mb-1">
                       {{ person.full_name || `${person.first_name} ${person.last_name}` }}
                     </h3>
                     <!-- Show address if filter is on (full width) -->
-                    <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-gray-600 mb-2 whitespace-pre-line">
+                    <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
                       {{ getPersonAddress(person) }}
                     </div>
-                    <div class="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                       <div v-if="displayFilters.generation && person.generation" class="flex items-center">
                         <span class="font-medium mr-1">Gen:</span> {{ person.generation }}
                       </div>
@@ -286,7 +357,7 @@
                       <div v-if="displayFilters.email && person.email" class="flex items-center">
                         <span class="font-medium mr-1">Email:</span> {{ person.email }}
                       </div>
-                      <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-indigo-600 hover:text-indigo-800">
+                      <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
                         <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                       </a>
                       <div v-if="displayFilters.household_name && person.primary_household_id && !(person.privacy_settings && person.privacy_settings.household_name)" class="flex items-center">
@@ -296,7 +367,7 @@
                     </div>
                   </div>
                 </div>
-              <svg class="w-5 h-5 text-gray-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-soft-400 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </div>
@@ -1257,13 +1328,39 @@ const filteredPersons = computed(() => {
           if (!b.age) return -1;
           return b.age - a.age;
 
-        case 'generation':
+        case 'generation': {
           if (!a.generation && !b.generation) return 0;
           if (!a.generation) return 1;
           if (!b.generation) return -1;
           const numA = parseInt(a.generation.replace('G', '')) || 999;
           const numB = parseInt(b.generation.replace('G', '')) || 999;
-          return numA - numB;
+          
+          // First sort by generation (G1, G2, G3, etc.)
+          if (numA !== numB) {
+            return numA - numB;
+          }
+          
+          // Within the same generation, sort by age (oldest to youngest)
+          const ageA = Number(a.age);
+          const ageB = Number(b.age);
+          const hasAgeA = !isNaN(ageA) && ageA !== null && ageA !== undefined;
+          const hasAgeB = !isNaN(ageB) && ageB !== null && ageB !== undefined;
+          
+          // If both have ages, sort by age descending (oldest first)
+          if (hasAgeA && hasAgeB) {
+            const ageDiff = ageB - ageA; // Descending order (oldest first)
+            if (ageDiff !== 0) return ageDiff;
+          }
+          
+          // If one has age and one doesn't (same generation), prioritize the one with age
+          if (hasAgeA && !hasAgeB) return -1;
+          if (!hasAgeA && hasAgeB) return 1;
+          
+          // If neither has age (same generation), use name as tiebreaker
+          const genNameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+          const genNameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+          return genNameA.localeCompare(genNameB);
+        }
 
         case 'name':
           const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
@@ -1277,6 +1374,34 @@ const filteredPersons = computed(() => {
   }
 
   return filtered;
+});
+
+// Group persons by generation for the generation view
+const personsByGeneration = computed(() => {
+  if (sortBy.value !== 'generation') {
+    return [];
+  }
+  
+  const grouped = {};
+  filteredPersons.value.forEach(person => {
+    const gen = person.generation || 'Unknown';
+    if (!grouped[gen]) {
+      grouped[gen] = [];
+    }
+    grouped[gen].push(person);
+  });
+  
+  // Convert to array and sort by generation number (G1, G2, etc.)
+  return Object.keys(grouped)
+    .map(gen => ({
+      generation: gen,
+      persons: grouped[gen]
+    }))
+    .sort((a, b) => {
+      const numA = parseInt(a.generation.replace('G', '')) || 999;
+      const numB = parseInt(b.generation.replace('G', '')) || 999;
+      return numA - numB;
+    });
 });
 
 async function fetchData() {

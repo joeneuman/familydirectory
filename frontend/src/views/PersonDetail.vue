@@ -1,17 +1,17 @@
 <template>
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-12">
-      <div class="text-gray-600">Loading...</div>
+      <div class="text-soft-600">Loading...</div>
     </div>
 
     <div v-else-if="person">
       <div class="mb-6">
-        <router-link to="/directory" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
+        <router-link to="/directory" class="text-warm-600 hover:text-warm-700 mb-4 inline-block font-medium transition-colors duration-200">
           ← Back to Directory
         </router-link>
       </div>
 
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div class="card">
         <!-- Header with photo and name -->
         <div class="flex flex-col sm:flex-row gap-6 mb-6">
           <div class="flex-shrink-0">
@@ -22,10 +22,10 @@
             />
           </div>
           <div class="flex-1">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <h1 class="text-3xl font-bold text-warm-700 mb-2">
               {{ person.full_name || `${person.first_name} ${person.last_name}` }}
             </h1>
-            <div class="text-gray-600 space-y-1">
+            <div class="text-soft-600 space-y-1">
               <div v-if="person.generation">Generation: {{ person.generation }}</div>
               <div v-if="person.is_deceased" class="text-red-600 font-medium">Deceased</div>
             </div>
@@ -33,7 +33,7 @@
           <div v-if="person.canEdit" class="flex-shrink-0">
             <router-link
               :to="`/person/${person.id}/edit`"
-              class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              class="btn-primary"
             >
               Edit Info
             </router-link>
@@ -41,18 +41,18 @@
         </div>
 
         <!-- Contact Information -->
-        <div class="border-t border-gray-200 pt-6 mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
+        <div class="border-t border-soft-200 pt-6 mb-6">
+          <h2 class="text-lg font-semibold text-warm-700 mb-4">Contact Information</h2>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <dt class="text-sm font-medium text-gray-500">Email</dt>
-              <dd :class="isRecentChange('email') ? 'recent-change p-2 rounded' : ''" class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Email</dt>
+              <dd :class="isRecentChange('email') ? 'recent-change p-2 rounded-xl' : ''" class="mt-1 text-sm text-soft-900">
                 {{ person.email || '—' }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Phone</dt>
-              <dd :class="isRecentChange('phone') ? 'recent-change p-2 rounded' : ''" class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Phone</dt>
+              <dd :class="isRecentChange('phone') ? 'recent-change p-2 rounded-xl' : ''" class="mt-1 text-sm text-soft-900">
                 {{ person.phone || '—' }}
               </dd>
             </div>
@@ -60,9 +60,9 @@
         </div>
 
         <!-- Address -->
-        <div v-if="person.address_line1 || person.city" class="border-t border-gray-200 pt-6 mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Address</h2>
-          <div :class="isRecentChange('address') ? 'recent-change p-3 rounded' : ''" class="text-sm text-gray-900">
+        <div v-if="person.address_line1 || person.city" class="border-t border-soft-200 pt-6 mb-6">
+          <h2 class="text-lg font-semibold text-warm-700 mb-4">Address</h2>
+          <div :class="isRecentChange('address') ? 'recent-change p-3 rounded-xl' : ''" class="text-sm text-soft-900">
             <div v-if="person.address_line1">{{ person.address_line1 }}</div>
             <div v-if="person.address_line2">{{ person.address_line2 }}</div>
             <div v-if="person.city || person.state || person.postal_code">
@@ -73,30 +73,30 @@
         </div>
 
         <!-- Personal Information -->
-        <div class="border-t border-gray-200 pt-6 mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
+        <div class="border-t border-soft-200 pt-6 mb-6">
+          <h2 class="text-lg font-semibold text-warm-700 mb-4">Personal Information</h2>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <dt class="text-sm font-medium text-gray-500">Date of Birth</dt>
-              <dd :class="isRecentChange('date_of_birth') ? 'recent-change p-2 rounded' : ''" class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Date of Birth</dt>
+              <dd :class="isRecentChange('date_of_birth') ? 'recent-change p-2 rounded-xl' : ''" class="mt-1 text-sm text-soft-900">
                 {{ formatDate(person.date_of_birth) || '—' }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Age</dt>
-              <dd class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Age</dt>
+              <dd class="mt-1 text-sm text-soft-900">
                 {{ person.age || '—' }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Wedding Anniversary</dt>
-              <dd :class="isRecentChange('wedding_anniversary_date') ? 'recent-change p-2 rounded' : ''" class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Wedding Anniversary</dt>
+              <dd :class="isRecentChange('wedding_anniversary_date') ? 'recent-change p-2 rounded-xl' : ''" class="mt-1 text-sm text-soft-900">
                 {{ formatDate(person.wedding_anniversary_date) || '—' }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Years Married</dt>
-              <dd class="mt-1 text-sm text-gray-900">
+              <dt class="text-sm font-medium text-soft-600">Years Married</dt>
+              <dd class="mt-1 text-sm text-soft-900">
                 {{ person.years_married || '—' }}
               </dd>
             </div>
@@ -104,27 +104,27 @@
         </div>
 
         <!-- Relationships -->
-        <div class="border-t border-gray-200 pt-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Relationships</h2>
+        <div class="border-t border-soft-200 pt-6">
+          <h2 class="text-lg font-semibold text-warm-700 mb-4">Relationships</h2>
           <div class="space-y-4">
             <div v-if="person.spouse">
-              <dt class="text-sm font-medium text-gray-500">Spouse</dt>
+              <dt class="text-sm font-medium text-soft-600">Spouse</dt>
               <dd class="mt-1">
                 <router-link
                   :to="`/person/${person.spouse.id}`"
-                  class="text-indigo-600 hover:text-indigo-800"
+                  class="text-warm-600 hover:text-warm-700 transition-colors duration-200 font-medium"
                 >
                   {{ person.spouse.full_name || `${person.spouse.first_name} ${person.spouse.last_name}` }}
                 </router-link>
               </dd>
             </div>
             <div v-if="person.parents && person.parents.length > 0">
-              <dt class="text-sm font-medium text-gray-500">Parents</dt>
+              <dt class="text-sm font-medium text-soft-600">Parents</dt>
               <dd class="mt-1 space-y-1">
                 <div v-for="parent in person.parents" :key="parent.id">
                   <router-link
                     :to="`/person/${parent.id}`"
-                    class="text-indigo-600 hover:text-indigo-800"
+                    class="text-warm-600 hover:text-warm-700 transition-colors duration-200 font-medium"
                   >
                     {{ parent.full_name || `${parent.first_name} ${parent.last_name}` }}
                   </router-link>
@@ -132,12 +132,12 @@
               </dd>
             </div>
             <div v-if="person.children && person.children.length > 0">
-              <dt class="text-sm font-medium text-gray-500">Children</dt>
+              <dt class="text-sm font-medium text-soft-600">Children</dt>
               <dd class="mt-1 space-y-1">
                 <div v-for="child in person.children" :key="child.id">
                   <router-link
                     :to="`/person/${child.id}`"
-                    class="text-indigo-600 hover:text-indigo-800"
+                    class="text-warm-600 hover:text-warm-700 transition-colors duration-200 font-medium"
                   >
                     {{ child.full_name || `${child.first_name} ${child.last_name}` }}
                   </router-link>
@@ -145,14 +145,14 @@
               </dd>
             </div>
             <div v-if="!person.spouse && (!person.parents || person.parents.length === 0) && (!person.children || person.children.length === 0)">
-              <p class="text-gray-600 text-sm">No relationships recorded</p>
+              <p class="text-soft-600 text-sm">No relationships recorded</p>
             </div>
           </div>
         </div>
 
         <!-- Recent Changes Legend -->
-        <div v-if="hasRecentChanges" class="border-t border-gray-200 pt-6 mt-6">
-          <p class="text-sm text-gray-600">
+        <div v-if="hasRecentChanges" class="border-t border-soft-200 pt-6 mt-6">
+          <p class="text-sm text-soft-600">
             <span class="inline-block w-4 h-4 bg-yellow-200 rounded mr-2 align-middle"></span>
             Fields in this color were updated less than 3 months ago.
           </p>
