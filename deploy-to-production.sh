@@ -77,9 +77,9 @@ if [ -n "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}Warning: Uncommitted changes detected.${NC}"
     git status --short
     
-    # Check if deploy-to-production.sh (in parent directory) has local changes
-    # The git repo is in backend, so the script is at ../deploy-to-production.sh
-    if git diff --quiet ../deploy-to-production.sh 2>/dev/null; then
+    # Check if deploy-to-production.sh has local changes
+    # Git repo is in root directory, so from backend dir, git shows path as "deploy-to-production.sh"
+    if git diff --quiet deploy-to-production.sh 2>/dev/null; then
         # No changes to deploy script, but other changes exist
         read -p "Continue anyway? (y/n) " -n 1 -r
         echo
@@ -156,10 +156,18 @@ if [ $PULL_EXIT_CODE -ne 0 ]; then
     elif echo "$PULL_OUTPUT" | grep -q "Your local changes to the following files would be overwritten by merge"; then
         echo -e "${YELLOW}Local changes to tracked files detected. Resetting conflicting files...${NC}"
         # Extract file names from error (they appear after the error message)
-        echo "$PULL_OUTPUT" | grep -A 20 "would be overwritten by merge:" | grep -v "would be overwritten" | grep -v "^--" | sed 's/^[[:space:]]*//' | grep -v "^$" | while read -r file; do
-            if [ -n "$file" ] && [ -f "$file" ]; then
-                echo -e "${YELLOW}Resetting: $file${NC}"
-                git checkout -- "$file" 2>/dev/null || true
+        # Files are listed one per line after the error message, before "Please commit"
+        echo "$PULL_OUTPUT" | sed -n '/would be overwritten by merge:/,/Please commit/p' | grep -v "would be overwritten" | grep -v "Please commit" | grep -v "^--" | sed 's/^[[:space:]]*//' | grep -v "^$" | while read -r file; do
+            if [ -n "$file" ]; then
+                # Handle both relative paths (like ../deploy-to-production.sh) and absolute paths
+                if [ -f "$file" ]; then
+                    echo -e "${YELLOW}Resetting: $file${NC}"
+                    git checkout -- "$file" 2>/dev/null || true
+                elif [ -f "../$file" ]; then
+                    # Try parent directory if file not found
+                    echo -e "${YELLOW}Resetting: ../$file${NC}"
+                    git checkout -- "../$file" 2>/dev/null || true
+                fi
             fi
         done
         # Try pull again
