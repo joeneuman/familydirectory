@@ -98,9 +98,41 @@ if [ "$CURRENT_BRANCH" != "master" ]; then
     fi
 fi
 
-# Step 2: Pull latest changes
-echo -e "${YELLOW}Step 2: Pulling latest changes from GitHub...${NC}"
-git pull origin master
+# Step 2: Handle untracked files that might conflict
+echo -e "${YELLOW}Step 2: Checking for conflicting untracked files...${NC}"
+# Remove common generated files that might conflict with incoming changes
+# These are typically export files that shouldn't be in git anyway
+CONFLICTING_FILES="database-export.sql backend/database-export.sql"
+for file in $CONFLICTING_FILES; do
+    if [ -f "$file" ]; then
+        echo -e "${YELLOW}Removing generated file that may conflict: $file${NC}"
+        rm -f "$file"
+    fi
+done
+
+# Step 3: Pull latest changes
+echo -e "${YELLOW}Step 3: Pulling latest changes from GitHub...${NC}"
+# Try to pull, and if it fails due to untracked files, remove them and retry
+if ! git pull origin master 2>&1 | tee /tmp/git-pull-output.log; then
+    # Check if the error is about untracked files
+    if grep -q "untracked working tree files would be overwritten" /tmp/git-pull-output.log; then
+        echo -e "${YELLOW}Untracked files conflict detected. Removing conflicting files...${NC}"
+        # Extract conflicting file names from the error message
+        grep "would be overwritten by merge:" /tmp/git-pull-output.log | sed 's/.*: *//' | while read -r file; do
+            if [ -f "$file" ]; then
+                echo -e "${YELLOW}Removing: $file${NC}"
+                rm -f "$file"
+            fi
+        done
+        # Try pull again
+        echo -e "${YELLOW}Retrying git pull...${NC}"
+        git pull origin master
+    else
+        echo -e "${RED}Git pull failed for a different reason. Check the output above.${NC}"
+        exit 1
+    fi
+fi
+rm -f /tmp/git-pull-output.log
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Error: Git pull failed. Deployment aborted.${NC}"
@@ -111,8 +143,8 @@ fi
 echo -e "${GREEN}Recent commits:${NC}"
 git log --oneline -5
 
-# Step 3: Navigate to frontend and install dependencies
-echo -e "${YELLOW}Step 3: Installing frontend dependencies...${NC}"
+# Step 4: Navigate to frontend and install dependencies
+echo -e "${YELLOW}Step 4: Installing frontend dependencies...${NC}"
 cd "$FRONTEND_DIR"
 npm install
 
@@ -121,8 +153,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Step 4: Build frontend
-echo -e "${YELLOW}Step 4: Building frontend...${NC}"
+# Step 5: Build frontend
+echo -e "${YELLOW}Step 5: Building frontend...${NC}"
 npm run build
 
 if [ $? -ne 0 ]; then
@@ -138,8 +170,8 @@ fi
 
 echo -e "${GREEN}Build successful!${NC}"
 
-# Step 5: Backup current public directory (optional safety measure)
-echo -e "${YELLOW}Step 5: Backing up current public directory...${NC}"
+# Step 6: Backup current public directory (optional safety measure)
+echo -e "${YELLOW}Step 6: Backing up current public directory...${NC}"
 BACKUP_DIR="${PUBLIC_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
 if [ -d "$PUBLIC_DIR" ] && [ "$(ls -A $PUBLIC_DIR 2>/dev/null)" ]; then
     cp -r "$PUBLIC_DIR" "$BACKUP_DIR"
@@ -152,13 +184,13 @@ else
     BACKUP_DIR=""  # Clear backup dir if none was created
 fi
 
-# Step 6: Remove old frontend files
-echo -e "${YELLOW}Step 6: Removing old frontend files...${NC}"
+# Step 7: Remove old frontend files
+echo -e "${YELLOW}Step 7: Removing old frontend files...${NC}"
 cd "$PROJECT_DIR"
 rm -rf "$PUBLIC_DIR"/*
 
-# Step 7: Copy new built files
-echo -e "${YELLOW}Step 7: Copying new frontend files...${NC}"
+# Step 8: Copy new built files
+echo -e "${YELLOW}Step 8: Copying new frontend files...${NC}"
 cp -r "$FRONTEND_DIR/dist"/* "$PUBLIC_DIR"/
 
 if [ $? -ne 0 ]; then
@@ -171,8 +203,8 @@ fi
 
 echo -e "${GREEN}Files copied successfully!${NC}"
 
-# Step 8: Restart application
-echo -e "${YELLOW}Step 8: Restarting application...${NC}"
+# Step 9: Restart application
+echo -e "${YELLOW}Step 9: Restarting application...${NC}"
 pm2 restart "$PM2_APP_NAME"
 
 if [ $? -ne 0 ]; then
@@ -180,8 +212,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Step 9: Verify application is running
-echo -e "${YELLOW}Step 9: Verifying application status...${NC}"
+# Step 10: Verify application is running
+echo -e "${YELLOW}Step 10: Verifying application status...${NC}"
 sleep 2  # Give PM2 a moment to restart
 pm2 status
 

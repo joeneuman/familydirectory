@@ -37,6 +37,8 @@ build/
 # Database
 *.sqlite
 *.db
+database-export.sql
+backend/database-export.sql
 
 # Uploads
 uploads/
