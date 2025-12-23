@@ -161,8 +161,13 @@ if [ $PULL_EXIT_CODE -ne 0 ]; then
         # Files are listed one per line after the error message, before "Please commit"
         echo "$PULL_OUTPUT" | sed -n '/would be overwritten by merge:/,/Please commit/p' | grep -v "would be overwritten" | grep -v "Please commit" | grep -v "^--" | sed 's/^[[:space:]]*//' | grep -v "^$" | while read -r file; do
             if [ -n "$file" ]; then
-                # Handle both relative paths (like ../deploy-to-production.sh) and absolute paths
-                if [ -f "$file" ]; then
+                # Special handling for deploy-to-production.sh
+                # Git reports it as "deploy-to-production.sh" but from backend/ it's actually "../deploy-to-production.sh"
+                if [[ "$file" == "deploy-to-production.sh" ]]; then
+                    echo -e "${YELLOW}Resetting: ../deploy-to-production.sh${NC}"
+                    git checkout -- ../deploy-to-production.sh 2>/dev/null || true
+                    chmod +x ../deploy-to-production.sh 2>/dev/null || true
+                elif [ -f "$file" ]; then
                     echo -e "${YELLOW}Resetting: $file${NC}"
                     git checkout -- "$file" 2>/dev/null || true
                 elif [ -f "../$file" ]; then
