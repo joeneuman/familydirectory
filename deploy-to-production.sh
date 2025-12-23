@@ -100,6 +100,8 @@ if [ -n "$(git status --porcelain)" ]; then
                 exit 1
             fi
         }
+        # Ensure the script remains executable after checkout
+        chmod +x ../deploy-to-production.sh
     fi
 fi
 
