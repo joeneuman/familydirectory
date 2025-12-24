@@ -95,13 +95,13 @@ router.get('/verify', async (req, res) => {
         
         if (new Date(foundToken.expires_at) < new Date()) {
           console.log('Token has expired');
-          // Redirect to login page with error message
+          // Redirect to expired link page
           let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
           const requestHost = req.get('host') || '';
           if (requestHost && !requestHost.includes('localhost')) {
             frontendUrl = `${req.protocol}://${requestHost.split(':')[0]}`;
           }
-          return res.redirect(`${frontendUrl}/login?error=link_expired`);
+          return res.redirect(`${frontendUrl}/auth/expired`);
         }
       }
       console.log('Token exists but findByToken returned null - unknown reason');

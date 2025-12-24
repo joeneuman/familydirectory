@@ -27,6 +27,12 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/auth/expired',
+    name: 'ExpiredLink',
+    component: () => import('../views/ExpiredLink.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
     path: '/directory',
     name: 'Directory',
     component: Directory,

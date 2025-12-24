@@ -8,3 +8,4 @@ CREATE INDEX IF NOT EXISTS idx_persons_is_admin ON persons(is_admin) WHERE is_ad
 
 
 
+
