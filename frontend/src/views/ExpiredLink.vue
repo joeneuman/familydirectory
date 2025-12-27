@@ -60,7 +60,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const countdown = ref(5);
 const hasAutoLogin = ref(false);
-const baseURL = ref('https://neumanfam.com');
+// Use current origin (works for both localhost and production)
+const baseURL = ref(window.location.origin);
 let countdownInterval = null;
 
 // Check for automatic login (check localStorage for auth token)
