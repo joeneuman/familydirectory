@@ -9,7 +9,7 @@
         <router-link :to="`/person/${person.id}`" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
           ← Back to Person
         </router-link>
-        <h1 class="text-2xl font-bold text-gray-900">Edit Information</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Edit</h1>
       </div>
 
       <form @submit.prevent="handleSubmit" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
