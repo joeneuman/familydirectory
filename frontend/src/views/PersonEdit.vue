@@ -77,6 +77,18 @@
                     {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                   </option>
                 </select>
+                <div v-if="formData.mother_id && formData.mother_id !== 'NOT_LISTED'" class="mt-2">
+                  <label class="block text-sm font-medium text-gray-700">
+                    Mother Relationship Type
+                  </label>
+                  <select
+                    v-model="formData.mother_relationship_type"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="biological">Biological Parent</option>
+                    <option value="step">Stepparent</option>
+                  </select>
+                </div>
               </div>
               <div v-if="formData.generation && formData.generation !== 'G1'">
                 <label class="block text-sm font-medium text-gray-700">
@@ -92,6 +104,18 @@
                     {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                   </option>
                 </select>
+                <div v-if="formData.father_id && formData.father_id !== 'NOT_LISTED'" class="mt-2">
+                  <label class="block text-sm font-medium text-gray-700">
+                    Father Relationship Type
+                  </label>
+                  <select
+                    v-model="formData.father_relationship_type"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="biological">Biological Parent</option>
+                    <option value="step">Stepparent</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Email</label>
@@ -543,7 +567,9 @@ const hasChanges = computed(() => {
     current.is_deceased !== original.is_deceased ||
     current.is_admin !== original.is_admin ||
     current.mother_id !== original.mother_id ||
-    current.father_id !== original.father_id
+    current.father_id !== original.father_id ||
+    current.mother_relationship_type !== original.mother_relationship_type ||
+    current.father_relationship_type !== original.father_relationship_type
   );
 });
 
@@ -611,6 +637,8 @@ const formData = ref({
   is_admin: false,
   mother_id: null,
   father_id: null,
+  mother_relationship_type: 'biological',
+  father_relationship_type: 'biological',
 });
 
 
@@ -642,6 +670,8 @@ async function fetchPerson() {
       // Convert null to "NOT_LISTED" for display in dropdown, keep existing IDs
       mother_id: person.value.mother_id ? person.value.mother_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
       father_id: person.value.father_id ? person.value.father_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
+      mother_relationship_type: person.value.mother_relationship_type || 'biological',
+      father_relationship_type: person.value.father_relationship_type || 'biological',
     };
     
     // Store original form data for change detection
@@ -719,9 +749,19 @@ async function handleSubmit() {
     // Convert "NOT_LISTED" to null for backend
     if (dataToSend.mother_id === 'NOT_LISTED') {
       dataToSend.mother_id = null;
+      dataToSend.mother_relationship_type = 'biological'; // Reset relationship type if not listed
     }
     if (dataToSend.father_id === 'NOT_LISTED') {
       dataToSend.father_id = null;
+      dataToSend.father_relationship_type = 'biological'; // Reset relationship type if not listed
+    }
+    
+    // Only send relationship types if parent is selected
+    if (!dataToSend.mother_id) {
+      delete dataToSend.mother_relationship_type;
+    }
+    if (!dataToSend.father_id) {
+      delete dataToSend.father_relationship_type;
     }
     
     // Don't send gender if it's empty (for existing records that don't have gender set yet)

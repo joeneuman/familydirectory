@@ -72,6 +72,18 @@
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
+              <div v-if="formData.mother_id && formData.mother_id !== 'NOT_LISTED'" class="mt-2">
+                <label class="block text-sm font-medium text-gray-700">
+                  Mother Relationship Type
+                </label>
+                <select
+                  v-model="formData.mother_relationship_type"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="biological">Biological Parent</option>
+                  <option value="step">Stepparent</option>
+                </select>
+              </div>
             </div>
             <div v-if="formData.generation && formData.generation !== 'G1'">
               <label class="block text-sm font-medium text-gray-700">
@@ -87,6 +99,18 @@
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
+              <div v-if="formData.father_id && formData.father_id !== 'NOT_LISTED'" class="mt-2">
+                <label class="block text-sm font-medium text-gray-700">
+                  Father Relationship Type
+                </label>
+                <select
+                  v-model="formData.father_relationship_type"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="biological">Biological Parent</option>
+                  <option value="step">Stepparent</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Email</label>
@@ -289,6 +313,8 @@ const formData = ref({
   is_deceased: false,
   mother_id: null,
   father_id: null,
+  mother_relationship_type: 'biological',
+  father_relationship_type: 'biological',
 });
 
 const allPeople = ref([]);
@@ -383,9 +409,19 @@ async function handleSubmit() {
     // Convert "NOT_LISTED" to null for backend
     if (formData.value.mother_id === 'NOT_LISTED') {
       formData.value.mother_id = null;
+      formData.value.mother_relationship_type = 'biological'; // Reset relationship type if not listed
     }
     if (formData.value.father_id === 'NOT_LISTED') {
       formData.value.father_id = null;
+      formData.value.father_relationship_type = 'biological'; // Reset relationship type if not listed
+    }
+    
+    // Only send relationship types if parent is selected
+    if (!formData.value.mother_id) {
+      delete formData.value.mother_relationship_type;
+    }
+    if (!formData.value.father_id) {
+      delete formData.value.father_relationship_type;
     }
 
     // Calculate age if date_of_birth is provided

@@ -57,6 +57,8 @@ export class Person {
       primary_household_id,
       mother_id,
       father_id,
+      mother_relationship_type,
+      father_relationship_type,
       gender
     } = data;
 
@@ -79,15 +81,17 @@ export class Person {
         address_line1, address_line2, city, state, postal_code, country,
         date_of_birth, age, wedding_anniversary_date, years_married,
         generation, photo_url, is_deceased, primary_household_id,
-        mother_id, father_id, gender
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+        mother_id, father_id, mother_relationship_type, father_relationship_type, gender
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING *`,
       [
         first_name, last_name, full_name, email, phone,
         address_line1, address_line2, city, state, postal_code, country || 'USA',
         date_of_birth, age, wedding_anniversary_date, years_married,
         generation, photo_url, is_deceased || false, primary_household_id,
-        mother_id || null, father_id || null, gender
+        mother_id || null, father_id || null, 
+        mother_relationship_type || 'biological', father_relationship_type || 'biological', 
+        gender
       ]
     );
     return result.rows[0];
@@ -137,7 +141,7 @@ export class Person {
       'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
       'date_of_birth', 'age', 'wedding_anniversary_date', 'years_married',
       'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin',
-      'privacy_settings', 'mother_id', 'father_id'
+      'privacy_settings', 'mother_id', 'father_id', 'mother_relationship_type', 'father_relationship_type'
     ];
     
     // Only include gender if it's actually being updated (and migration has been run)

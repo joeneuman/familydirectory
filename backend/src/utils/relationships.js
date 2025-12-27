@@ -69,21 +69,52 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
   }
 
   // Direct parent-child relationships
+  // Check if target is current user's biological parent
   if (currentUserParents.some(p => p.id === targetPersonId)) {
-    // Current user's parent is the target person
-    return targetPersonFromMap.gender === 'Female' ? 'Mother' : 'Father';
+    const isBiological = (currentUserFromMap.mother_id === targetPersonId && currentUserFromMap.mother_relationship_type === 'biological') ||
+                         (currentUserFromMap.father_id === targetPersonId && currentUserFromMap.father_relationship_type === 'biological');
+    if (isBiological) {
+      return targetPersonFromMap.gender === 'Female' ? 'Mother' : 'Father';
+    } else {
+      return targetPersonFromMap.gender === 'Female' ? 'Stepmother' : 'Stepfather';
+    }
   }
+  // Check if current user is target's biological parent
   if (targetPersonParents.some(p => p.id === currentUserId)) {
-    // Target person's parent is the current user - target is the child
-    return targetPersonFromMap.gender === 'Female' ? 'Daughter' : 'Son';
+    const isBiological = (targetPersonFromMap.mother_id === currentUserId && targetPersonFromMap.mother_relationship_type === 'biological') ||
+                         (targetPersonFromMap.father_id === currentUserId && targetPersonFromMap.father_relationship_type === 'biological');
+    if (isBiological) {
+      return targetPersonFromMap.gender === 'Female' ? 'Daughter' : 'Son';
+    } else {
+      return targetPersonFromMap.gender === 'Female' ? 'Stepdaughter' : 'Stepson';
+    }
   }
 
   // Siblings (share at least one parent)
-  const sharedParents = currentUserParents.filter(p => 
-    targetPersonParents.some(tp => tp.id === p.id)
+  // Check for biological siblings (share at least one biological parent)
+  const sharedBiologicalParents = currentUserParents.filter(cp => 
+    targetPersonParents.some(tp => tp.id === cp.id) &&
+    ((currentUserFromMap.mother_id === cp.id && currentUserFromMap.mother_relationship_type === 'biological') ||
+     (currentUserFromMap.father_id === cp.id && currentUserFromMap.father_relationship_type === 'biological')) &&
+    ((targetPersonFromMap.mother_id === cp.id && targetPersonFromMap.mother_relationship_type === 'biological') ||
+     (targetPersonFromMap.father_id === cp.id && targetPersonFromMap.father_relationship_type === 'biological'))
   );
-  if (sharedParents.length > 0) {
+  
+  if (sharedBiologicalParents.length > 0) {
     return targetPersonFromMap.gender === 'Female' ? 'Sister' : 'Brother';
+  }
+  
+  // Check for step siblings (share at least one stepparent, but no biological parents)
+  const sharedStepParents = currentUserParents.filter(cp => 
+    targetPersonParents.some(tp => tp.id === cp.id) &&
+    ((currentUserFromMap.mother_id === cp.id && currentUserFromMap.mother_relationship_type === 'step') ||
+     (currentUserFromMap.father_id === cp.id && currentUserFromMap.father_relationship_type === 'step')) &&
+    ((targetPersonFromMap.mother_id === cp.id && targetPersonFromMap.mother_relationship_type === 'step') ||
+     (targetPersonFromMap.father_id === cp.id && targetPersonFromMap.father_relationship_type === 'step'))
+  );
+  
+  if (sharedStepParents.length > 0) {
+    return targetPersonFromMap.gender === 'Female' ? 'Stepsister' : 'Stepbrother';
   }
 
   // Load grandparents if needed
