@@ -6,8 +6,8 @@
 
     <div v-else-if="person && person.canEdit">
       <div class="mb-6">
-        <router-link :to="`/person/${person.id}`" class="text-warm-600 hover:text-warm-700 mb-4 inline-block font-medium transition-colors duration-200">
-          ← Back to Person Detail
+        <router-link :to="`/person/${person.id}/edit`" class="text-warm-600 hover:text-warm-700 mb-4 inline-block font-medium transition-colors duration-200">
+          ← Back to Edit
         </router-link>
       </div>
 
@@ -22,19 +22,65 @@
         <!-- Household Management -->
         <div class="mb-8">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Household Management</h2>
-          <div class="space-y-4">
-            <!-- Manage Household button -->
-            <div>
-              <button
-                type="button"
-                @click="showHouseholdModal = true"
-                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          
+          <div v-if="loadingPeople" class="text-center py-4">
+            <div class="text-gray-600">Loading...</div>
+          </div>
+
+          <div v-else class="space-y-4">
+            <!-- Spouse Selection -->
+            <div class="mb-4 pb-4 border-b border-gray-200">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Spouse (Optional)</label>
+              <select
+                v-model="selectedSpouse"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               >
-                Manage Household
-              </button>
-              <p class="mt-2 text-sm text-gray-600">
-                Select people to include in this household. People will be removed from their current households.
-              </p>
+                <option :value="null">None</option>
+                <option
+                  v-for="p in allPeople.filter(p => p.id !== person.id)"
+                  :key="p.id"
+                  :value="p.id"
+                >
+                  {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                </option>
+              </select>
+              <p class="mt-1 text-xs text-gray-500">Select a spouse to show them directly under you in the family view and combine anniversaries in the event view.</p>
+            </div>
+
+            <!-- Household Members Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Household Members</label>
+              <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4">
+                <div
+                  v-for="p in allPeople"
+                  :key="p.id"
+                  class="flex items-center py-2 border-b border-gray-100 last:border-0"
+                >
+                  <input
+                    :id="`person-${p.id}`"
+                    type="checkbox"
+                    :value="p.id"
+                    v-model="selectedHouseholdMembers"
+                    :disabled="p.id === person.id"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label 
+                    :for="`person-${p.id}`" 
+                    class="ml-3 flex-1 cursor-pointer"
+                  >
+                    <span class="text-sm font-medium text-gray-900">
+                      {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                    </span>
+                    <span v-if="p.id === person.id" class="ml-2 text-xs text-gray-500">(Head)</span>
+                    <span v-if="p.primary_household_id && p.id !== person.id" class="ml-2 text-xs text-orange-600">
+                      (Currently in Another Household)
+                    </span>
+                    <span v-if="selectedSpouse === p.id" class="ml-2 text-xs text-indigo-600">
+                      (Spouse)
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
             
             <!-- Remove from Household -->
@@ -121,19 +167,19 @@
           <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-end space-x-4">
               <router-link
-                :to="`/person/${person.id}`"
+                :to="`/person/${person.id}/edit`"
                 class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </router-link>
               <button
-                v-if="hasChanges"
+                v-if="hasChanges || hasHouseholdChanges"
                 type="button"
                 @click="handleSubmit"
-                :disabled="saving"
+                :disabled="saving || savingHousehold"
                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
               >
-                <span v-if="saving">Saving...</span>
+                <span v-if="saving || savingHousehold">Saving...</span>
                 <span v-else>Save</span>
               </button>
             </div>
@@ -152,102 +198,6 @@
     <div v-else class="text-center py-12">
       <div class="text-red-600">Person not found</div>
     </div>
-
-    <!-- Household Management Modal -->
-    <div
-      v-if="showHouseholdModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-      @click.self="showHouseholdModal = false"
-    >
-      <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
-            Manage Household for {{ person.first_name }} {{ person.last_name }}
-          </h3>
-          <p class="text-sm text-gray-600 mb-4">
-            Select people to include in this household. People will be removed from their current households.
-          </p>
-
-          <div v-if="loadingPeople" class="text-center py-4">
-            <div class="text-gray-600">Loading...</div>
-          </div>
-
-          <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4 mb-4">
-            <!-- Spouse Selection -->
-            <div class="mb-4 pb-4 border-b border-gray-200">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Select Spouse (Optional)</label>
-              <select
-                v-model="selectedSpouse"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option :value="null">None</option>
-                <option
-                  v-for="p in allPeople.filter(p => p.id !== person.id)"
-                  :key="p.id"
-                  :value="p.id"
-                >
-                  {{ p.full_name || `${p.first_name} ${p.last_name}` }}
-                </option>
-              </select>
-              <p class="mt-1 text-xs text-gray-500">Select a spouse to show them directly under you in the family view and combine anniversaries in the event view.</p>
-            </div>
-
-            <!-- Household Members Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Household Members</label>
-              <div
-                v-for="p in allPeople"
-                :key="p.id"
-                class="flex items-center py-2 border-b border-gray-100 last:border-0"
-              >
-                <input
-                  :id="`person-${p.id}`"
-                  type="checkbox"
-                  :value="p.id"
-                  v-model="selectedHouseholdMembers"
-                  :disabled="p.id === person.id"
-                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label 
-                  :for="`person-${p.id}`" 
-                  class="ml-3 flex-1 cursor-pointer"
-                >
-                  <span class="text-sm font-medium text-gray-900">
-                    {{ p.full_name || `${p.first_name} ${p.last_name}` }}
-                  </span>
-                  <span v-if="p.id === person.id" class="ml-2 text-xs text-gray-500">(Head)</span>
-                  <span v-if="p.primary_household_id && p.id !== person.id" class="ml-2 text-xs text-orange-600">
-                    (Currently in Another Household)
-                  </span>
-                  <span v-if="selectedSpouse === p.id" class="ml-2 text-xs text-indigo-600">
-                    (Spouse)
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end space-x-3">
-            <button
-              type="button"
-              @click="showHouseholdModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              @click="saveHousehold"
-              :disabled="savingHousehold"
-              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-            >
-              <span v-if="savingHousehold">Saving...</span>
-              <span v-else>Save Household</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -265,7 +215,6 @@ const person = ref(null);
 const loading = ref(true);
 const saving = ref(false);
 const error = ref(null);
-const showHouseholdModal = ref(false);
 const allPeople = ref([]);
 const selectedHouseholdMembers = ref([]);
 const selectedSpouse = ref(null);
@@ -280,6 +229,7 @@ const formData = ref({
 });
 
 const originalFormData = ref(null);
+const originalHouseholdData = ref(null);
 
 // Computed properties for mother/father dropdowns
 const availableMothers = computed(() => {
@@ -305,6 +255,22 @@ const hasChanges = computed(() => {
   );
 });
 
+// Check if household data has changed
+const hasHouseholdChanges = computed(() => {
+  if (!originalHouseholdData.value || !person.value) return false;
+  
+  const currentSpouse = selectedSpouse.value;
+  const originalSpouse = originalHouseholdData.value.spouse;
+  
+  const currentMembers = [...selectedHouseholdMembers.value].sort();
+  const originalMembers = [...originalHouseholdData.value.members].sort();
+  
+  return (
+    currentSpouse !== originalSpouse ||
+    JSON.stringify(currentMembers) !== JSON.stringify(originalMembers)
+  );
+});
+
 async function fetchPerson() {
   try {
     const response = await axios.get(`${getApiBaseURL()}/persons/${route.params.id}`);
@@ -327,47 +293,82 @@ async function fetchPerson() {
   }
 }
 
+async function initializeHouseholdData() {
+  // Pre-select the current person
+  selectedHouseholdMembers.value = [person.value.id];
+  
+  // Pre-select current household members
+  if (person.value.primary_household_id) {
+    const currentMembers = allPeople.value.filter(p => 
+      p.primary_household_id === person.value.primary_household_id
+    );
+    const memberIds = currentMembers.map(m => m.id);
+    selectedHouseholdMembers.value = [...new Set([...selectedHouseholdMembers.value, ...memberIds])];
+  }
+  
+  // Pre-select current spouse if exists
+  if (person.value.spouse) {
+    selectedSpouse.value = person.value.spouse.id;
+  }
+  
+  // Store original household data for change detection
+  originalHouseholdData.value = {
+    spouse: selectedSpouse.value,
+    members: [...selectedHouseholdMembers.value],
+  };
+}
+
 async function handleSubmit() {
   saving.value = true;
   error.value = null;
 
   try {
-    // Validate: mother_id and father_id are required for non-G1
-    if (person.value.generation && person.value.generation !== 'G1') {
-      const motherSelected = formData.value.mother_id && formData.value.mother_id !== '';
-      const fatherSelected = formData.value.father_id && formData.value.father_id !== '';
-      
-      if (!motherSelected && !fatherSelected) {
-        error.value = 'Please select a Mother or Father, or choose "Not listed here" for at least one';
-        saving.value = false;
-        return;
+    // Save parent relationships if changed
+    if (hasChanges.value) {
+      // Validate: mother_id and father_id are required for non-G1
+      if (person.value.generation && person.value.generation !== 'G1') {
+        const motherSelected = formData.value.mother_id && formData.value.mother_id !== '';
+        const fatherSelected = formData.value.father_id && formData.value.father_id !== '';
+        
+        if (!motherSelected && !fatherSelected) {
+          error.value = 'Please select a Mother or Father, or choose "Not listed here" for at least one';
+          saving.value = false;
+          return;
+        }
       }
-    }
 
-    const dataToSend = { ...formData.value };
+      const dataToSend = { ...formData.value };
+      
+      // Convert "NOT_LISTED" to null for backend
+      if (dataToSend.mother_id === 'NOT_LISTED') {
+        dataToSend.mother_id = null;
+        dataToSend.mother_relationship_type = 'biological';
+      }
+      if (dataToSend.father_id === 'NOT_LISTED') {
+        dataToSend.father_id = null;
+        dataToSend.father_relationship_type = 'biological';
+      }
+      
+      // Only send relationship types if parent is selected
+      if (!dataToSend.mother_id) {
+        delete dataToSend.mother_relationship_type;
+      }
+      if (!dataToSend.father_id) {
+        delete dataToSend.father_relationship_type;
+      }
+      
+      await axios.put(`${getApiBaseURL()}/persons/${route.params.id}`, dataToSend);
+    }
     
-    // Convert "NOT_LISTED" to null for backend
-    if (dataToSend.mother_id === 'NOT_LISTED') {
-      dataToSend.mother_id = null;
-      dataToSend.mother_relationship_type = 'biological';
-    }
-    if (dataToSend.father_id === 'NOT_LISTED') {
-      dataToSend.father_id = null;
-      dataToSend.father_relationship_type = 'biological';
+    // Save household if changed
+    if (hasHouseholdChanges.value) {
+      await saveHousehold();
     }
     
-    // Only send relationship types if parent is selected
-    if (!dataToSend.mother_id) {
-      delete dataToSend.mother_relationship_type;
-    }
-    if (!dataToSend.father_id) {
-      delete dataToSend.father_relationship_type;
-    }
-    
-    await axios.put(`${getApiBaseURL()}/persons/${route.params.id}`, dataToSend);
-    router.push(`/person/${route.params.id}`);
+    router.push(`/person/${route.params.id}/edit`);
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to save changes';
+    saving.value = false;
   } finally {
     saving.value = false;
   }
@@ -423,12 +424,11 @@ async function saveHousehold() {
       await axios.delete(`${getApiBaseURL()}/persons/${person.value.id}/spouse`);
     }
 
-    showHouseholdModal.value = false;
     await fetchPerson();
-    window.location.reload();
+    await initializeHouseholdData();
   } catch (error) {
     console.error('Error saving household:', error);
-    alert(error.response?.data?.error || 'Failed to save household');
+    throw error; // Re-throw to be handled by handleSubmit
   } finally {
     savingHousehold.value = false;
   }
@@ -451,18 +451,13 @@ async function removeFromHousehold() {
   }
 }
 
-watch(showHouseholdModal, (isOpen) => {
-  if (isOpen) {
-    fetchAllPeople();
-  }
-});
-
 onMounted(async () => {
   if (!authStore.currentUser) {
     await authStore.fetchCurrentUser();
   }
   await fetchPerson();
   await fetchAllPeople();
+  await initializeHouseholdData();
 });
 </script>
 
