@@ -366,12 +366,11 @@ async function handleSubmit() {
 
   try {
     // Validate: mother_id and father_id are required for non-G1
+    // At least one must be selected (either a person or "Not listed here")
     if (formData.value.generation && formData.value.generation !== 'G1') {
-      const motherId = formData.value.mother_id === 'NOT_LISTED' ? null : formData.value.mother_id;
-      const fatherId = formData.value.father_id === 'NOT_LISTED' ? null : formData.value.father_id;
-      
-      if (!motherId && !fatherId) {
-        error.value = 'Please select a Mother or Father, or choose "Not listed here" for both';
+      // Check if both are empty (not selected and not "NOT_LISTED")
+      if (!formData.value.mother_id && !formData.value.father_id) {
+        error.value = 'Please select a Mother or Father, or choose "Not listed here" for at least one';
         saving.value = false;
         return;
       }
