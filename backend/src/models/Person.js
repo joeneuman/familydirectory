@@ -200,9 +200,14 @@ export class Person {
       return result.rows[0];
     } catch (error) {
       // Handle case where gender column doesn't exist (migration not run)
-      if (error.code === '42703' && error.message && error.message.includes('gender')) {
-        throw new Error('Gender column does not exist. Please run the database migration: node backend/scripts/run-gender-migration.js');
+      // PostgreSQL error code 42703 = undefined_column
+      if (error.code === '42703') {
+        const errorMessage = error.message || '';
+        if (errorMessage.toLowerCase().includes('gender') || errorMessage.toLowerCase().includes('column "gender"')) {
+          throw new Error('Gender column does not exist. Please run the database migration: node backend/scripts/run-gender-migration.js');
+        }
       }
+      // Re-throw the original error if it's not a gender column issue
       throw error;
     }
   }

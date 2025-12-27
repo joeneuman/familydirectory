@@ -633,7 +633,18 @@ router.put('/:id', async (req, res) => {
     res.json(formattedPerson);
   } catch (error) {
     console.error('Error updating person:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
+    
+    // Provide more helpful error message for missing column
+    if (error.message && error.message.includes('Gender column does not exist')) {
+      return res.status(500).json({ 
+        error: 'Database migration required',
+        message: error.message
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Internal server error',
       message: error.message,
