@@ -82,9 +82,29 @@ router.get('/verify', async (req, res) => {
       
       console.log('Tokens found in database:', allTokens.rows.length);
       
+      // Helper function to determine frontend URL
+      const getFrontendUrl = () => {
+        let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const requestHost = req.get('host') || '';
+        if (requestHost && !requestHost.includes('localhost')) {
+          frontendUrl = `${req.protocol}://${requestHost.split(':')[0]}`;
+        }
+        return frontendUrl;
+      };
+      
       if (allTokens.rows.length === 0) {
-        console.log('Token not found in database');
-        return res.status(400).json({ error: 'Invalid token' });
+        // Token not found in database - could be expired and cleaned up, or invalid
+        // Check if token looks like a UUID (magic link tokens are UUIDs)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(token)) {
+          // Looks like a valid UUID format - likely expired and cleaned up
+          console.log('Token not found but looks like UUID - likely expired and cleaned up, redirecting to expired page');
+          return res.redirect(`${getFrontendUrl()}/auth/expired`);
+        } else {
+          // Not a valid UUID format - invalid token
+          console.log('Token not found and invalid format');
+          return res.status(400).json({ error: 'Invalid token' });
+        }
       } else {
         const foundToken = allTokens.rows[0];
         console.log('Token details:', {
@@ -96,16 +116,12 @@ router.get('/verify', async (req, res) => {
         if (new Date(foundToken.expires_at) < new Date()) {
           console.log('Token has expired');
           // Redirect to expired link page
-          let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-          const requestHost = req.get('host') || '';
-          if (requestHost && !requestHost.includes('localhost')) {
-            frontendUrl = `${req.protocol}://${requestHost.split(':')[0]}`;
-          }
-          return res.redirect(`${frontendUrl}/auth/expired`);
+          return res.redirect(`${getFrontendUrl()}/auth/expired`);
         }
       }
       console.log('Token exists but findByToken returned null - unknown reason');
-      return res.status(400).json({ error: 'Invalid or expired token' });
+      // For any other case, redirect to expired page for better UX
+      return res.redirect(`${getFrontendUrl()}/auth/expired`);
     }
 
     console.log('=== TOKEN IS VALID, PROCEEDING ===');
