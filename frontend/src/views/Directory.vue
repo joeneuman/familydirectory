@@ -62,29 +62,34 @@
                         />
                       </div>
                       <div class="flex-1">
-                        <h4 class="font-semibold text-soft-900 mb-1">{{ event.name }}</h4>
+                        <h4 class="font-semibold text-soft-900 mb-1">
+                          {{ event.name }}
+                          <span v-if="displayFilters.relationship && event.relationship" class="text-sm font-normal text-soft-500 ml-2">
+                            ({{ event.relationship }})
+                          </span>
+                        </h4>
                         <!-- Show address if filter is on (full width) -->
-                        <div v-if="displayFilters.address && event.address" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
+                        <div v-if="displayFilters.address && event.address" :class="event.person && isRecentChange(event.person, 'address') ? 'recent-change p-3 rounded-xl text-sm text-soft-600 mb-2 whitespace-pre-line' : 'text-sm text-soft-600 mb-2 whitespace-pre-line'">
                           {{ event.address }}
                         </div>
                         <div class="text-sm text-soft-600 flex flex-wrap items-center gap-x-4 gap-y-1">
                           <!-- Show birthday if it exists and filter allows -->
-                          <div v-if="event.hasBirthday && displayFilters.birthday" class="flex items-center">
+                          <div v-if="event.hasBirthday && displayFilters.birthday" :class="event.person && isRecentChange(event.person, 'date_of_birth') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium text-warm-600 mr-1">🎂 Birthday</span>
                             <span v-if="event.birthdayAge !== null && event.birthdayAge !== undefined">({{ event.birthdayAge }} years old)</span>
                           </div>
                           <!-- Show anniversary if it exists and filter allows -->
-                          <div v-if="event.hasAnniversary && displayFilters.anniversary" class="flex items-center">
+                          <div v-if="event.hasAnniversary && displayFilters.anniversary" :class="event.person && isRecentChange(event.person, 'wedding_anniversary_date') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium text-pink-600 mr-1">💍 Anniversary</span>
                             <span v-if="event.anniversaryYears !== null && event.anniversaryYears !== undefined">({{ event.anniversaryYears }} years)</span>
                           </div>
                           <div v-if="displayFilters.generation && event.generation" class="flex items-center">
                             <span class="font-medium mr-1">Gen:</span> {{ event.generation }}
                           </div>
-                          <div v-if="displayFilters.email && event.email" class="flex items-center">
+                          <div v-if="displayFilters.email && event.email" :class="event.person && isRecentChange(event.person, 'email') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Email:</span> {{ event.email }}
                           </div>
-                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
+                          <a v-if="displayFilters.phone && event.phone" :href="`tel:${event.phone}`" @click.stop :class="event.person && isRecentChange(event.person, 'phone') ? 'recent-change p-2 rounded-xl flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200' : 'flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200'">
                             <span class="font-medium mr-1">Phone:</span> {{ event.phone }}
                           </a>
                         </div>
@@ -128,9 +133,12 @@
                         <!-- Bold name if head of household -->
                         <h3 :class="isHeadOfHousehold(household.id, person.id) ? 'text-lg font-extrabold text-warm-700 mb-1' : 'text-lg font-semibold text-soft-900 mb-1'">
                           {{ person.full_name || `${person.first_name} ${person.last_name}` }}
+                          <span v-if="displayFilters.relationship && person.relationship" class="text-sm font-normal text-soft-500 ml-2">
+                            ({{ person.relationship }})
+                          </span>
                         </h3>
                         <!-- Show address only for head of household (full width) -->
-                        <div v-if="displayFilters.address && isHeadOfHousehold(household.id, person.id) && household.address" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
+                        <div v-if="displayFilters.address && isHeadOfHousehold(household.id, person.id) && household.address" :class="isRecentChange(person, 'address') ? 'recent-change p-3 rounded-xl text-sm text-soft-600 mb-2 whitespace-pre-line' : 'text-sm text-soft-600 mb-2 whitespace-pre-line'">
                           {{ household.address }}
                         </div>
                         <!-- Horizontal layout for other fields -->
@@ -141,19 +149,19 @@
                           <div v-if="displayFilters.age && person.age !== null && person.age !== undefined" class="flex items-center">
                             <span class="font-medium mr-1">Age:</span> {{ person.age }}
                           </div>
-                          <div v-if="displayFilters.birthday && person.date_of_birth" class="flex items-center">
+                          <div v-if="displayFilters.birthday && person.date_of_birth" :class="isRecentChange(person, 'date_of_birth') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Bday:</span> {{ formatDateShort(person.date_of_birth) }}
                           </div>
-                          <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
+                          <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" :class="isRecentChange(person, 'wedding_anniversary_date') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
                           </div>
                           <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
                             <span class="font-medium mr-1">Married:</span> {{ person.years_married }}
                           </div>
-                          <div v-if="displayFilters.email && person.email" class="flex items-center">
+                          <div v-if="displayFilters.email && person.email" :class="isRecentChange(person, 'email') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Email:</span> {{ person.email }}
                           </div>
-                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
+                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop :class="isRecentChange(person, 'phone') ? 'recent-change p-2 rounded-xl flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200' : 'flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200'">
                             <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                           </a>
                           <!-- Show household name for non-head members (if not hidden by privacy) -->
@@ -196,9 +204,12 @@
                           <!-- Bold name (they're their own head) -->
                           <h3 class="text-lg font-extrabold text-warm-700 mb-1">
                             {{ person.full_name || `${person.first_name} ${person.last_name}` }}
+                            <span v-if="displayFilters.relationship && person.relationship" class="text-sm font-normal text-soft-500 ml-2">
+                              ({{ person.relationship }})
+                            </span>
                           </h3>
                           <!-- Show address if they have one (full width) -->
-                          <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
+                          <div v-if="displayFilters.address && getPersonAddress(person)" :class="isRecentChange(person, 'address') ? 'recent-change p-3 rounded-xl text-sm text-soft-600 mb-2 whitespace-pre-line' : 'text-sm text-soft-600 mb-2 whitespace-pre-line'">
                             {{ getPersonAddress(person) }}
                           </div>
                           <!-- Horizontal layout for other fields -->
@@ -271,6 +282,9 @@
                       <div class="flex-1">
                         <h3 class="text-lg font-semibold text-soft-900 mb-1">
                           {{ person.full_name || `${person.first_name} ${person.last_name}` }}
+                          <span v-if="displayFilters.relationship && person.relationship" class="text-sm font-normal text-soft-500 ml-2">
+                            ({{ person.relationship }})
+                          </span>
                         </h3>
                         <!-- Show address if filter is on (full width) -->
                         <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
@@ -283,19 +297,19 @@
                           <div v-if="displayFilters.age && person.age !== null && person.age !== undefined" class="flex items-center">
                             <span class="font-medium mr-1">Age:</span> {{ person.age }}
                           </div>
-                          <div v-if="displayFilters.birthday && person.date_of_birth" class="flex items-center">
+                          <div v-if="displayFilters.birthday && person.date_of_birth" :class="isRecentChange(person, 'date_of_birth') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Bday:</span> {{ formatDateShort(person.date_of_birth) }}
                           </div>
-                          <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" class="flex items-center">
+                          <div v-if="displayFilters.anniversary && person.wedding_anniversary_date" :class="isRecentChange(person, 'wedding_anniversary_date') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Anniv:</span> {{ formatDateShort(person.wedding_anniversary_date) }}
                           </div>
                           <div v-if="displayFilters.years_married && person.years_married !== null && person.years_married !== undefined" class="flex items-center">
                             <span class="font-medium mr-1">Yrs Married:</span> {{ person.years_married }}
                           </div>
-                          <div v-if="displayFilters.email && person.email" class="flex items-center">
+                          <div v-if="displayFilters.email && person.email" :class="isRecentChange(person, 'email') ? 'recent-change p-2 rounded-xl flex items-center' : 'flex items-center'">
                             <span class="font-medium mr-1">Email:</span> {{ person.email }}
                           </div>
-                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop class="flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200">
+                          <a v-if="displayFilters.phone && person.phone" :href="`tel:${person.phone}`" @click.stop :class="isRecentChange(person, 'phone') ? 'recent-change p-2 rounded-xl flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200' : 'flex items-center text-warm-600 hover:text-warm-700 transition-colors duration-200'">
                             <span class="font-medium mr-1">Phone:</span> {{ person.phone }}
                           </a>
                           <div v-if="displayFilters.household_name && person.primary_household_id && !(person.privacy_settings && person.privacy_settings.household_name)" class="flex items-center">
@@ -333,6 +347,9 @@
                   <div class="flex-1">
                     <h3 class="text-lg font-semibold text-soft-900 mb-1">
                       {{ person.full_name || `${person.first_name} ${person.last_name}` }}
+                      <span v-if="displayFilters.relationship && person.relationship" class="text-sm font-normal text-soft-500 ml-2">
+                        ({{ person.relationship }})
+                      </span>
                     </h3>
                     <!-- Show address if filter is on (full width) -->
                     <div v-if="displayFilters.address && getPersonAddress(person)" class="text-sm text-soft-600 mb-2 whitespace-pre-line">
@@ -508,7 +525,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, inject } from 'vue';
 import axios from 'axios';
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, subMonths } from 'date-fns';
 import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 // Inject shared state from App.vue
@@ -551,6 +568,7 @@ const defaultDisplayFiltersByView = {
     anniversary: false,
     years_married: true,
     household_name: false,
+    relationship: false,
   },
   next_event: {
     photo: true,
@@ -563,6 +581,7 @@ const defaultDisplayFiltersByView = {
     anniversary: true,
     years_married: true,
     household_name: false,
+    relationship: false,
   },
   age_asc: {
     photo: true,
@@ -599,6 +618,7 @@ const defaultDisplayFiltersByView = {
     anniversary: false,
     years_married: false,
     household_name: true,
+    relationship: false,
   },
   name: {
     photo: true,
@@ -611,6 +631,7 @@ const defaultDisplayFiltersByView = {
     anniversary: false,
     years_married: false,
     household_name: false,
+    relationship: false,
   },
 };
 
@@ -785,7 +806,9 @@ const scheduleView = computed(() => {
             events.push({
               date: eventDate,
               personId: person.id,
+              person: person, // Store full person object for recent change checking
               name: person.full_name || `${person.first_name} ${person.last_name}`,
+              relationship: person.relationship,
               eventType: 'birthday',
               age: ageAtEvent,
               generation: person.generation,
@@ -834,6 +857,7 @@ const scheduleView = computed(() => {
                   date: eventDate,
                   personId: person.id,
                   spouseId: person.spouse.id,
+                  person: person, // Store full person object for recent change checking
                   name: combinedName,
                   eventType: 'anniversary',
                   age: person.age,
@@ -844,6 +868,7 @@ const scheduleView = computed(() => {
                   spouse_photo_url: person.spouse.photo_url,
                   years_married: yearsAtEvent,
                   address: getPersonAddress(person),
+                  relationship: person.relationship,
                 });
               }
             } else {
@@ -851,6 +876,7 @@ const scheduleView = computed(() => {
               events.push({
                 date: eventDate,
                 personId: person.id,
+                person: person, // Store full person object for recent change checking
                 name: person.full_name || `${person.first_name} ${person.last_name}`,
                 eventType: 'anniversary',
                 age: person.age,
@@ -860,6 +886,7 @@ const scheduleView = computed(() => {
                 photo_url: person.photo_url,
                 years_married: yearsAtEvent,
                 address: getPersonAddress(person),
+                relationship: person.relationship,
               });
             }
           }
@@ -1403,6 +1430,30 @@ const personsByGeneration = computed(() => {
       return numA - numB;
     });
 });
+
+// Check if a field has been modified in the last 3 months
+function isRecentChange(person, field) {
+  if (!person) return false;
+  const threeMonthsAgo = subMonths(new Date(), 3);
+  
+  if (field === 'email') {
+    return person.last_modified_at && parseISO(person.last_modified_at) > threeMonthsAgo;
+  }
+  if (field === 'phone') {
+    return person.phone_last_modified_at && parseISO(person.phone_last_modified_at) > threeMonthsAgo;
+  }
+  if (field === 'address') {
+    return (person.address_line1_last_modified_at && parseISO(person.address_line1_last_modified_at) > threeMonthsAgo) ||
+           (person.city_last_modified_at && parseISO(person.city_last_modified_at) > threeMonthsAgo);
+  }
+  if (field === 'date_of_birth') {
+    return person.date_of_birth_last_modified_at && parseISO(person.date_of_birth_last_modified_at) > threeMonthsAgo;
+  }
+  if (field === 'wedding_anniversary_date') {
+    return person.wedding_anniversary_date_last_modified_at && parseISO(person.wedding_anniversary_date_last_modified_at) > threeMonthsAgo;
+  }
+  return false;
+}
 
 async function fetchData() {
   try {

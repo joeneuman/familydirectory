@@ -4,6 +4,7 @@ import { Household } from '../models/Household.js';
 import { MaritalRelationship } from '../models/MaritalRelationship.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { canEdit } from '../utils/permissions.js';
+import { calculateRelationship } from '../utils/relationships.js';
 import { differenceInYears, parseISO } from 'date-fns';
 
 const router = express.Router();
@@ -174,6 +175,9 @@ router.get('/', async (req, res) => {
         // Get spouse if exists
         const spouse = await Person.getSpouse(person.id);
 
+        // Calculate relationship to current user
+        const relationship = await calculateRelationship(req.user.id, person.id);
+
         const enrichedPerson = formatPersonDates({
           ...person,
           age: calculatedAge,
@@ -181,6 +185,7 @@ router.get('/', async (req, res) => {
           is_head_of_household: isHeadOfHousehold,
           household_address: householdAddress,
           spouse: spouse,
+          relationship: relationship,
         });
 
         // Filter private fields based on privacy settings
