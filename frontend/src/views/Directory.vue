@@ -650,7 +650,7 @@ const currentViewName = computed(() => {
 async function loadDisplayFilters() {
   const viewKey = `directoryDisplayFilters_${currentViewType.value}`;
   try {
-    const response = await axios.get(`/api/preferences/${viewKey}`);
+    const response = await axios.get(`${getApiBaseURL()}/preferences/${viewKey}`);
     // Merge saved preferences with view-specific defaults
     const viewDefaults = defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters;
     return { ...viewDefaults, ...response.data };

@@ -18,7 +18,16 @@
       <div class="card">
         <!-- Select People with Limited Access -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-soft-700 mb-2">People with Limited Access</label>
+          <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-medium text-soft-700">People with Limited Access</label>
+            <button
+              type="button"
+              @click="selectAllPeople"
+              class="text-sm text-warm-600 hover:text-warm-700 font-medium transition-colors duration-200"
+            >
+              Select All
+            </button>
+          </div>
           <div class="max-h-48 overflow-y-auto border border-soft-200 rounded-xl p-3 space-y-2">
             <div
               v-for="p in allPeople.filter(p => p.id !== person.id)"
@@ -239,6 +248,14 @@ async function fetchAllPeople() {
   } catch (err) {
     console.error('Error fetching people:', err);
   }
+}
+
+function selectAllPeople() {
+  // Select all people except the current person
+  const allPeopleIds = allPeople.value
+    .filter(p => p.id !== person.value?.id)
+    .map(p => p.id);
+  privacySettings.value.restricted_people = allPeopleIds;
 }
 
 async function handleSave() {
