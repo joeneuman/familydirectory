@@ -50,5 +50,45 @@ window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
 });
 
+// Handle global window errors (for testing)
+window.addEventListener('error', (event) => {
+  // Only handle errors that aren't already handled by Vue
+  if (event.error && !event.error._handled) {
+    console.error('Global window error:', event.error);
+    
+    // Mark as handled to prevent duplicate handling
+    event.error._handled = true;
+    
+    // Store error details
+    const errorInfo = {
+      message: event.error.message || event.message || 'An unexpected error occurred',
+      stack: event.error.stack,
+      name: event.error.name || 'Error',
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+    
+    localStorage.setItem('last_error', JSON.stringify(errorInfo));
+    
+    // Navigate to error page
+    router.push('/error');
+  }
+});
+
+// Add a test function to window for easy error triggering (available in all environments)
+window.triggerTestError = function(message = 'Test error for error handling') {
+  const error = new Error(message);
+  error.name = 'TestError';
+  // Store error and redirect
+  const errorInfo = {
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+  };
+  localStorage.setItem('last_error', JSON.stringify(errorInfo));
+  router.push('/error');
+};
+
 app.mount('#app');
 

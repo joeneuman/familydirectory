@@ -104,6 +104,21 @@ const routes = [
     component: () => import('../views/ErrorView.vue'),
     meta: { requiresAuth: false },
   },
+  // Catch-all route for 404s - must be last
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    beforeEnter: (to, from, next) => {
+      // Store 404 error info
+      const errorInfo = {
+        message: `Page not found: ${to.path}`,
+        name: 'NotFoundError',
+        url: to.fullPath,
+      };
+      localStorage.setItem('last_error', JSON.stringify(errorInfo));
+      next('/error');
+    },
+  },
 ];
 
 const router = createRouter({
