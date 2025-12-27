@@ -163,24 +163,15 @@ import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 import { format } from 'date-fns';
+import { useSiteSettingsStore } from '../stores/siteSettings';
 
+const siteSettingsStore = useSiteSettingsStore();
 const households = ref([]);
 const persons = ref([]);
 const loading = ref(true);
 
-// Site name management - fetch from API
-const siteName = ref('Family Directory');
-
-// Fetch site name from API
-async function fetchSiteName() {
-  try {
-    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
-    siteName.value = response.data.siteName || 'Family Directory';
-  } catch (error) {
-    console.error('Error fetching site name:', error);
-    siteName.value = 'Family Directory';
-  }
-}
+// Use site name from store (reactive)
+const siteName = computed(() => siteSettingsStore.siteName);
 
 /**
  * Parse a date string in a timezone-agnostic way
@@ -428,7 +419,7 @@ function handlePrint() {
 onMounted(() => {
   fetchData();
   // Fetch site name from API
-  fetchSiteName();
+  siteSettingsStore.fetchSiteName();
 });
 </script>
 
