@@ -497,6 +497,15 @@
             />
             <label for="filter-household-name" class="ml-3 text-sm font-medium text-gray-700">Household Name</label>
           </div>
+          <div class="flex items-center">
+            <input
+              id="filter-relationship"
+              type="checkbox"
+              v-model="displayFilters.relationship"
+              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label for="filter-relationship" class="ml-3 text-sm font-medium text-gray-700">Relationship</label>
+          </div>
         </div>
 
         <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
