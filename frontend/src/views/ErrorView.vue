@@ -5,7 +5,7 @@
         <!-- Error Icon -->
         <div class="text-center mb-6">
           <div class="inline-flex items-center justify-center mb-4">
-            <img src="/images/error.gif" alt="Error" class="max-w-full h-auto" style="max-width: 200px; max-height: 200px;" />
+            <img src="/images/error.gif" alt="Error" class="max-w-full h-auto" style="max-width: 600px; max-height: 600px;" />
           </div>
           <h1 class="text-3xl font-bold text-warm-800 mb-2">Something Went Wrong</h1>
           <p class="text-soft-600">We're sorry, but an error has occurred. Please help us fix it by providing details below.</p>
