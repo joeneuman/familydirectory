@@ -72,7 +72,7 @@
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
-              <div v-if="formData.mother_id && formData.mother_id !== 'NOT_LISTED'" class="mt-2">
+              <div v-if="formData.mother_id && formData.mother_id !== '' && formData.mother_id !== 'NOT_LISTED'" class="mt-2">
                 <label class="block text-sm font-medium text-gray-700">
                   Mother Relationship Type
                 </label>
@@ -99,7 +99,7 @@
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
-              <div v-if="formData.father_id && formData.father_id !== 'NOT_LISTED'" class="mt-2">
+              <div v-if="formData.father_id && formData.father_id !== '' && formData.father_id !== 'NOT_LISTED'" class="mt-2">
                 <label class="block text-sm font-medium text-gray-700">
                   Father Relationship Type
                 </label>
