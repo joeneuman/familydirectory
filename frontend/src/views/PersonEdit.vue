@@ -59,6 +59,7 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select Mother</option>
+                  <option value="NOT_LISTED">Not listed here</option>
                   <option v-for="p in availableMothers" :key="p.id" :value="p.id">
                     {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                   </option>
@@ -74,6 +75,7 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select Father</option>
+                  <option value="NOT_LISTED">Not listed here</option>
                   <option v-for="p in availableFathers" :key="p.id" :value="p.id">
                     {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                   </option>
@@ -587,8 +589,9 @@ async function fetchPerson() {
       photo_url: person.value.photo_url || '',
       is_deceased: person.value.is_deceased || false,
       is_admin: person.value.is_admin || false,
-      mother_id: person.value.mother_id || null,
-      father_id: person.value.father_id || null,
+      // Convert null to "NOT_LISTED" for display in dropdown, keep existing IDs
+      mother_id: person.value.mother_id ? person.value.mother_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
+      father_id: person.value.father_id ? person.value.father_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
     };
   } catch (error) {
     console.error('Error fetching person:', error);
@@ -644,8 +647,11 @@ async function handleSubmit() {
   try {
     // Validate: mother_id and father_id are required for non-G1
     if (formData.value.generation && formData.value.generation !== 'G1') {
-      if (!formData.value.mother_id && !formData.value.father_id) {
-        error.value = 'Mother or Father must be specified for non-G1 persons';
+      const motherId = formData.value.mother_id === 'NOT_LISTED' ? null : formData.value.mother_id;
+      const fatherId = formData.value.father_id === 'NOT_LISTED' ? null : formData.value.father_id;
+      
+      if (!motherId && !fatherId) {
+        error.value = 'Please select a Mother or Father, or choose "Not listed here" for both';
         saving.value = false;
         return;
       }
@@ -653,6 +659,14 @@ async function handleSubmit() {
 
     // If person is not head of household, don't send address fields
     const dataToSend = { ...formData.value };
+    
+    // Convert "NOT_LISTED" to null for backend
+    if (dataToSend.mother_id === 'NOT_LISTED') {
+      dataToSend.mother_id = null;
+    }
+    if (dataToSend.father_id === 'NOT_LISTED') {
+      dataToSend.father_id = null;
+    }
     if (person.value && !person.value.is_head_of_household) {
       // Remove address fields from the update
       delete dataToSend.address_line1;

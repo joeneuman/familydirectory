@@ -60,10 +60,11 @@ export class Person {
     } = data;
 
     // Validate: mother_id and father_id are required except for G1
+    // Note: Both can be null if explicitly set to "Not listed here" (handled by frontend validation)
+    // Backend allows null values - frontend ensures at least one is selected OR both are "Not listed here"
     if (generation && generation !== 'G1') {
-      if (!mother_id && !father_id) {
-        throw new Error('Mother or Father must be specified for non-G1 persons');
-      }
+      // Allow null values - frontend validation ensures proper selection
+      // This allows cases where parents are not in the directory
     }
 
     const result = await pool.query(
@@ -88,16 +89,14 @@ export class Person {
 
   static async update(id, data) {
     // Validate: mother_id and father_id are required for non-G1
+    // Note: Both can be null if explicitly set to "Not listed here" (handled by frontend validation)
+    // Backend allows null values - frontend ensures at least one is selected OR both are "Not listed here"
     const currentPerson = await this.findById(id);
     const generation = data.generation !== undefined ? data.generation : currentPerson?.generation;
     
     if (generation && generation !== 'G1') {
-      const motherId = data.mother_id !== undefined ? data.mother_id : currentPerson?.mother_id;
-      const fatherId = data.father_id !== undefined ? data.father_id : currentPerson?.father_id;
-      
-      if (!motherId && !fatherId) {
-        throw new Error('Mother or Father must be specified for non-G1 persons');
-      }
+      // Allow null values - frontend validation ensures proper selection
+      // This allows cases where parents are not in the directory
     }
 
     // If photo_url is being updated (including being cleared), get the old photo_url first to delete it

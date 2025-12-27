@@ -54,6 +54,7 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Select Mother</option>
+                <option value="NOT_LISTED">Not listed here</option>
                 <option v-for="p in allPeople" :key="p.id" :value="p.id">
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
@@ -69,6 +70,7 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Select Father</option>
+                <option value="NOT_LISTED">Not listed here</option>
                 <option v-for="p in allPeople" :key="p.id" :value="p.id">
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
@@ -352,11 +354,22 @@ async function handleSubmit() {
   try {
     // Validate: mother_id and father_id are required for non-G1
     if (formData.value.generation && formData.value.generation !== 'G1') {
-      if (!formData.value.mother_id && !formData.value.father_id) {
-        error.value = 'Mother or Father must be specified for non-G1 persons';
+      const motherId = formData.value.mother_id === 'NOT_LISTED' ? null : formData.value.mother_id;
+      const fatherId = formData.value.father_id === 'NOT_LISTED' ? null : formData.value.father_id;
+      
+      if (!motherId && !fatherId) {
+        error.value = 'Please select a Mother or Father, or choose "Not listed here" for both';
         saving.value = false;
         return;
       }
+    }
+
+    // Convert "NOT_LISTED" to null for backend
+    if (formData.value.mother_id === 'NOT_LISTED') {
+      formData.value.mother_id = null;
+    }
+    if (formData.value.father_id === 'NOT_LISTED') {
+      formData.value.father_id = null;
     }
 
     // Calculate age if date_of_birth is provided
