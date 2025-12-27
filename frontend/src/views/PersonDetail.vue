@@ -35,7 +35,7 @@
               :to="`/person/${person.id}/edit`"
               class="btn-primary"
             >
-              Edit Info
+              Edit
             </router-link>
           </div>
         </div>
