@@ -104,7 +104,7 @@ function startCountdown() {
       // Redirect to base URL (external redirect)
       window.location.href = baseURL.value;
     }
-  }, 1000);
+  }, 2000); // Each number lasts 2 seconds
 }
 
 onMounted(async () => {
