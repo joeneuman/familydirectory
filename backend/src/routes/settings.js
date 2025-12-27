@@ -44,6 +44,12 @@ router.post('/site-name', authenticateToken, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error setting site name:', error);
+    // Provide more helpful error message if table doesn't exist
+    if (error.message && error.message.includes('does not exist')) {
+      return res.status(500).json({ 
+        error: 'Settings table not found. Please run the database migration: 005_add_app_settings.sql' 
+      });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
