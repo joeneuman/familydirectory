@@ -63,6 +63,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/person/:id/household-relationships',
+    name: 'HouseholdRelationships',
+    component: () => import('../views/HouseholdRelationships.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/print/options',
     name: 'PrintOptionsView',
     component: () => import('../views/PrintOptionsView.vue'),
