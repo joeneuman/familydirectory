@@ -123,6 +123,10 @@ export class Person {
     let paramCount = 1;
 
     // Validate: gender is required if being updated
+    // Treat empty strings as undefined (don't update gender if it's empty)
+    if (data.gender === '') {
+      delete data.gender;
+    }
     if (data.gender !== undefined && data.gender !== null && data.gender !== 'Male' && data.gender !== 'Female') {
       throw new Error('Gender must be either "Male" or "Female"');
     }
@@ -133,8 +137,14 @@ export class Person {
       'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
       'date_of_birth', 'age', 'wedding_anniversary_date', 'years_married',
       'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin',
-      'privacy_settings', 'mother_id', 'father_id', 'gender'
+      'privacy_settings', 'mother_id', 'father_id'
     ];
+    
+    // Only include gender if it's actually being updated (and migration has been run)
+    // This prevents errors if the gender column doesn't exist yet
+    if (data.gender !== undefined && data.gender !== null && data.gender !== '') {
+      allowedFields.push('gender');
+    }
 
     for (const field of allowedFields) {
       if (data[field] !== undefined) {

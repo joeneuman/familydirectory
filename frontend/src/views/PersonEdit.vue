@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
     <div v-if="loading" class="text-center py-12">
       <div class="text-gray-600">Loading...</div>
     </div>
@@ -337,42 +337,44 @@
             </router-link>
           </div>
 
-          <!-- Buttons -->
-          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-            <!-- Delete button (admin only) -->
-            <div v-if="authStore.currentUser?.is_admin">
-              <button
-                type="button"
-                @click="handleDelete"
-                :disabled="deleting"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-              >
-                <span v-if="deleting">Deleting...</span>
-                <span v-else>Delete Contact</span>
-              </button>
-            </div>
-            <div v-else class="w-0"></div>
-            
-            <!-- Save/Cancel buttons -->
-            <div class="flex space-x-4">
-              <router-link
-                :to="`/person/${person.id}`"
-                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </router-link>
-              <button
-                type="submit"
-                :disabled="saving"
-                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-              >
-                <span v-if="saving">Saving...</span>
-                <span v-else>Save Changes</span>
-              </button>
-            </div>
+          <!-- Delete button (admin only) - keep in main content -->
+          <div v-if="authStore.currentUser?.is_admin" class="pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              @click="handleDelete"
+              :disabled="deleting"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              <span v-if="deleting">Deleting...</span>
+              <span v-else>Delete Contact</span>
+            </button>
           </div>
         </div>
       </form>
+
+      <!-- Sticky Footer with Cancel/Save buttons -->
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div class="flex justify-end space-x-4">
+            <router-link
+              :to="`/person/${person.id}`"
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </router-link>
+            <button
+              v-if="hasChanges"
+              type="button"
+              @click="handleSubmit"
+              :disabled="saving"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <span v-if="saving">Saving...</span>
+              <span v-else>Save</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="person && !person.canEdit" class="text-center py-12">
@@ -514,9 +516,43 @@ const availableFathers = computed(() => {
   // In the future, could filter by gender if that field exists
   return allPeople.value.filter(p => p.id !== person.value?.id);
 });
+// Check if form data has changed
+const hasChanges = computed(() => {
+  if (!originalFormData.value || !person.value) return false;
+  
+  // Compare current formData with originalFormData
+  const current = formData.value;
+  const original = originalFormData.value;
+  
+  // Compare all fields
+  return (
+    current.first_name !== original.first_name ||
+    current.last_name !== original.last_name ||
+    current.full_name !== original.full_name ||
+    current.email !== original.email ||
+    current.phone !== original.phone ||
+    current.address_line1 !== original.address_line1 ||
+    current.address_line2 !== original.address_line2 ||
+    current.city !== original.city ||
+    current.state !== original.state ||
+    current.postal_code !== original.postal_code ||
+    current.country !== original.country ||
+    current.date_of_birth !== original.date_of_birth ||
+    current.wedding_anniversary_date !== original.wedding_anniversary_date ||
+    current.generation !== original.generation ||
+    current.gender !== original.gender ||
+    current.photo_url !== original.photo_url ||
+    current.is_deceased !== original.is_deceased ||
+    current.is_admin !== original.is_admin ||
+    current.mother_id !== original.mother_id ||
+    current.father_id !== original.father_id
+  );
+});
+
 const selectedHouseholdMembers = ref([]);
 const selectedSpouse = ref(null);
 const loadingPeople = ref(false);
+const originalFormData = ref(null);
 const savingHousehold = ref(false);
 const uploading = ref(false);
 
@@ -609,6 +645,9 @@ async function fetchPerson() {
       mother_id: person.value.mother_id ? person.value.mother_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
       father_id: person.value.father_id ? person.value.father_id : (person.value.generation && person.value.generation !== 'G1' ? 'NOT_LISTED' : null),
     };
+    
+    // Store original form data for change detection
+    originalFormData.value = JSON.parse(JSON.stringify(formData.value));
   } catch (error) {
     console.error('Error fetching person:', error);
   } finally {
@@ -683,6 +722,12 @@ async function handleSubmit() {
     if (dataToSend.father_id === 'NOT_LISTED') {
       dataToSend.father_id = null;
     }
+    
+    // Don't send gender if it's empty (for existing records that don't have gender set yet)
+    if (!dataToSend.gender || dataToSend.gender === '') {
+      delete dataToSend.gender;
+    }
+    
     if (person.value && !person.value.is_head_of_household) {
       // Remove address fields from the update
       delete dataToSend.address_line1;
