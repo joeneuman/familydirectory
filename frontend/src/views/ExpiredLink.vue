@@ -56,40 +56,47 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
+import { nextTick } from 'vue';
+
 const router = useRouter();
 const authStore = useAuthStore();
 const countdown = ref(5);
 const hasAutoLogin = ref(false);
-// Use current origin (works for both localhost and production)
-const baseURL = ref(window.location.origin);
+// Initialize with empty string, will be set in onMounted
+const baseURL = ref('');
 let countdownInterval = null;
 
 // Check for automatic login (check localStorage for auth token)
 async function checkAutoLogin() {
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    // Check if user is already authenticated
-    if (authStore.currentUser) {
-      hasAutoLogin.value = true;
-    } else if (authStore.isAuthenticated) {
-      // Token exists, try to fetch user to verify it's still valid
-      try {
-        await authStore.fetchCurrentUser();
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      // Check if user is already authenticated
+      if (authStore.currentUser) {
         hasAutoLogin.value = true;
-      } catch (error) {
-        // Token is invalid, no auto-login
-        hasAutoLogin.value = false;
+      } else if (authStore.isAuthenticated) {
+        // Token exists, try to fetch user to verify it's still valid
+        try {
+          await authStore.fetchCurrentUser();
+          hasAutoLogin.value = true;
+        } catch (error) {
+          // Token is invalid, no auto-login
+          hasAutoLogin.value = false;
+        }
+      } else {
+        // Token exists in localStorage but not in store, try to validate it
+        try {
+          await authStore.fetchCurrentUser();
+          hasAutoLogin.value = true;
+        } catch (error) {
+          hasAutoLogin.value = false;
+        }
       }
     } else {
-      // Token exists in localStorage but not in store, try to validate it
-      try {
-        await authStore.fetchCurrentUser();
-        hasAutoLogin.value = true;
-      } catch (error) {
-        hasAutoLogin.value = false;
-      }
+      hasAutoLogin.value = false;
     }
-  } else {
+  } catch (error) {
+    console.error('Error checking auto login:', error);
     hasAutoLogin.value = false;
   }
 }
@@ -102,13 +109,24 @@ function startCountdown() {
     if (countdown.value <= 0) {
       clearInterval(countdownInterval);
       // Redirect to base URL (external redirect)
-      window.location.href = baseURL.value;
+      window.location.href = baseURL.value || window.location.origin;
     }
   }, 2000); // Each number lasts 2 seconds
 }
 
 onMounted(async () => {
-  await checkAutoLogin();
+  // Set baseURL immediately when component mounts
+  if (typeof window !== 'undefined') {
+    baseURL.value = window.location.origin;
+  }
+  
+  // Wait for next tick to ensure DOM is ready
+  await nextTick();
+  
+  // Check auto login (non-blocking - don't await)
+  checkAutoLogin();
+  
+  // Start countdown immediately
   startCountdown();
 });
 
