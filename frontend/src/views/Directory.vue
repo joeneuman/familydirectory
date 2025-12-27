@@ -685,10 +685,12 @@ async function loadDisplayFilters() {
     const viewDefaults = defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters;
     return { ...viewDefaults, ...response.data };
   } catch (error) {
-    // If preference doesn't exist (404), use view-specific defaults
+    // If preference doesn't exist (404), use view-specific defaults (this is expected and normal)
     if (error.response?.status === 404) {
+      // Silently use defaults - 404 is expected for new preferences
       return { ...(defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters) };
     }
+    // Only log non-404 errors
     console.error('Error loading saved filters:', error);
     return { ...(defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters) };
   }
