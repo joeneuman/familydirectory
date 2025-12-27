@@ -107,6 +107,12 @@
         <div class="border-t border-soft-200 pt-6">
           <h2 class="text-lg font-semibold text-warm-700 mb-4">Relationships</h2>
           <div class="space-y-4">
+            <div v-if="person.relationship">
+              <dt class="text-sm font-medium text-soft-600">Relationship to You</dt>
+              <dd class="mt-1 text-sm text-soft-900">
+                Your {{ person.relationship }}
+              </dd>
+            </div>
             <div v-if="person.spouse">
               <dt class="text-sm font-medium text-soft-600">Spouse</dt>
               <dd class="mt-1">
@@ -144,7 +150,7 @@
                 </div>
               </dd>
             </div>
-            <div v-if="!person.spouse && (!person.parents || person.parents.length === 0) && (!person.children || person.children.length === 0)">
+            <div v-if="!person.relationship && !person.spouse && (!person.parents || person.parents.length === 0) && (!person.children || person.children.length === 0)">
               <p class="text-soft-600 text-sm">No relationships recorded</p>
             </div>
           </div>

@@ -467,6 +467,17 @@ router.get('/:id', async (req, res) => {
       }
     }
 
+    // Calculate relationship to logged-in user (if not viewing own profile)
+    let relationship = null;
+    if (req.user.id !== person.id) {
+      try {
+        relationship = await calculateRelationship(req.user.id, person.id);
+      } catch (error) {
+        console.error('Error calculating relationship:', error);
+        // Don't fail the request if relationship calculation fails
+      }
+    }
+
     const enrichedPerson = formatPersonDates({
       ...person,
       age: calculatedAge,
@@ -477,6 +488,7 @@ router.get('/:id', async (req, res) => {
       canEdit: hasEditPermission,
       is_head_of_household: isHeadOfHousehold,
       household_address: householdAddress,
+      relationship, // Add relationship to logged-in user
     });
 
     // Filter private fields based on privacy settings (unless viewing own profile)
