@@ -56,8 +56,14 @@ export class Person {
       is_deceased,
       primary_household_id,
       mother_id,
-      father_id
+      father_id,
+      gender
     } = data;
+
+    // Validate: gender is required
+    if (!gender || (gender !== 'Male' && gender !== 'Female')) {
+      throw new Error('Gender is required and must be either "Male" or "Female"');
+    }
 
     // Validate: mother_id and father_id are required except for G1
     // Note: Both can be null if explicitly set to "Not listed here" (handled by frontend validation)
@@ -73,15 +79,15 @@ export class Person {
         address_line1, address_line2, city, state, postal_code, country,
         date_of_birth, age, wedding_anniversary_date, years_married,
         generation, photo_url, is_deceased, primary_household_id,
-        mother_id, father_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        mother_id, father_id, gender
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
       RETURNING *`,
       [
         first_name, last_name, full_name, email, phone,
         address_line1, address_line2, city, state, postal_code, country || 'USA',
         date_of_birth, age, wedding_anniversary_date, years_married,
         generation, photo_url, is_deceased || false, primary_household_id,
-        mother_id || null, father_id || null
+        mother_id || null, father_id || null, gender
       ]
     );
     return result.rows[0];
@@ -116,13 +122,18 @@ export class Person {
     const values = [];
     let paramCount = 1;
 
+    // Validate: gender is required if being updated
+    if (data.gender !== undefined && data.gender !== null && data.gender !== 'Male' && data.gender !== 'Female') {
+      throw new Error('Gender must be either "Male" or "Female"');
+    }
+
     // Build dynamic update query
     const allowedFields = [
       'first_name', 'last_name', 'full_name', 'email', 'phone',
       'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
       'date_of_birth', 'age', 'wedding_anniversary_date', 'years_married',
       'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin',
-      'privacy_settings', 'mother_id', 'father_id'
+      'privacy_settings', 'mother_id', 'father_id', 'gender'
     ];
 
     for (const field of allowedFields) {

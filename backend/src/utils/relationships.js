@@ -70,10 +70,12 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
 
   // Direct parent-child relationships
   if (currentUserParents.some(p => p.id === targetPersonId)) {
-    return 'Parent';
+    // Current user's parent is the target person
+    return targetPersonFromMap.gender === 'Female' ? 'Mother' : 'Father';
   }
   if (targetPersonParents.some(p => p.id === currentUserId)) {
-    return 'Child';
+    // Target person's parent is the current user - target is the child
+    return targetPersonFromMap.gender === 'Female' ? 'Daughter' : 'Son';
   }
 
   // Siblings (share at least one parent)
@@ -81,7 +83,7 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     targetPersonParents.some(tp => tp.id === p.id)
   );
   if (sharedParents.length > 0) {
-    return 'Sibling';
+    return targetPersonFromMap.gender === 'Female' ? 'Sister' : 'Brother';
   }
 
   // Load grandparents if needed
@@ -116,7 +118,7 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
       parentParents.push(peopleMap.get(parent.father_id));
     }
     if (parentParents.some(p => p.id === targetPersonId)) {
-      return 'Grandparent';
+      return targetPersonFromMap.gender === 'Female' ? 'Grandmother' : 'Grandfather';
     }
   }
 
@@ -130,7 +132,7 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
       parentParents.push(peopleMap.get(parent.father_id));
     }
     if (parentParents.some(p => p.id === currentUserId)) {
-      return 'Grandchild';
+      return currentUserFromMap.gender === 'Female' ? 'Granddaughter' : 'Grandson';
     }
   }
 
@@ -151,7 +153,7 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     );
     
     if (isSibling) {
-      return 'Niece/Nephew';
+      return targetPersonFromMap.gender === 'Female' ? 'Niece' : 'Nephew';
     }
   }
 
@@ -171,7 +173,7 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     );
     
     if (isSibling) {
-      return 'Aunt/Uncle';
+      return targetPersonFromMap.gender === 'Female' ? 'Aunt' : 'Uncle';
     }
   }
 

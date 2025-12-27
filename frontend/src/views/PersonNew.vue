@@ -44,6 +44,20 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">
+                Gender <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="formData.gender"
+                required
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
             <div v-if="formData.generation && formData.generation !== 'G1'">
               <label class="block text-sm font-medium text-gray-700">
                 Mother <span class="text-red-500">*</span>
@@ -272,6 +286,7 @@ const formData = ref({
   date_of_birth: '',
   wedding_anniversary_date: '',
   generation: '',
+  gender: '',
   photo_url: '',
   is_deceased: false,
   mother_id: null,
