@@ -56,19 +56,22 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
-import { nextTick } from 'vue';
-
 const router = useRouter();
 const authStore = useAuthStore();
 const countdown = ref(5);
 const hasAutoLogin = ref(false);
-// Initialize with empty string, will be set in onMounted
-const baseURL = ref('');
+// Set baseURL immediately - use window.location.origin if available, otherwise empty string
+const baseURL = ref(typeof window !== 'undefined' ? window.location.origin : '');
 let countdownInterval = null;
 
 // Check for automatic login (check localStorage for auth token)
 async function checkAutoLogin() {
   try {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      hasAutoLogin.value = false;
+      return;
+    }
+    
     const token = localStorage.getItem('auth_token');
     if (token) {
       // Check if user is already authenticated
@@ -109,19 +112,19 @@ function startCountdown() {
     if (countdown.value <= 0) {
       clearInterval(countdownInterval);
       // Redirect to base URL (external redirect)
-      window.location.href = baseURL.value || window.location.origin;
+      const redirectUrl = baseURL.value || (typeof window !== 'undefined' ? window.location.origin : '/');
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      }
     }
   }, 2000); // Each number lasts 2 seconds
 }
 
-onMounted(async () => {
-  // Set baseURL immediately when component mounts
-  if (typeof window !== 'undefined') {
+onMounted(() => {
+  // Ensure baseURL is set
+  if (typeof window !== 'undefined' && !baseURL.value) {
     baseURL.value = window.location.origin;
   }
-  
-  // Wait for next tick to ensure DOM is ready
-  await nextTick();
   
   // Check auto login (non-blocking - don't await)
   checkAutoLogin();
