@@ -184,18 +184,27 @@ export class Person {
     }
 
     values.push(id);
-    const result = await pool.query(
-      `UPDATE persons SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
-      values
-    );
+    
+    try {
+      const result = await pool.query(
+        `UPDATE persons SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+        values
+      );
 
-    // Delete old photo file if photo_url was changed
-    // This handles: replacing with new photo, clearing photo (null), or changing to different photo
-    if (oldPhotoUrl && oldPhotoUrl !== data.photo_url) {
-      await deleteImageFile(oldPhotoUrl);
+      // Delete old photo file if photo_url was changed
+      // This handles: replacing with new photo, clearing photo (null), or changing to different photo
+      if (oldPhotoUrl && oldPhotoUrl !== data.photo_url) {
+        await deleteImageFile(oldPhotoUrl);
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      // Handle case where gender column doesn't exist (migration not run)
+      if (error.code === '42703' && error.message && error.message.includes('gender')) {
+        throw new Error('Gender column does not exist. Please run the database migration: node backend/scripts/run-gender-migration.js');
+      }
+      throw error;
     }
-
-    return result.rows[0];
   }
 
   static async getSpouse(personId) {
