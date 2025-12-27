@@ -41,6 +41,10 @@ export const useAuthStore = defineStore('auth', () => {
       return response.data;
     } catch (error) {
       console.error('Error fetching current user:', error);
+      // If token is invalid (403), clear it
+      if (error.response?.status === 403) {
+        logout();
+      }
       throw error;
     }
   }

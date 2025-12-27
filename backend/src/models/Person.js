@@ -1,4 +1,5 @@
 import pool from '../config/database.js';
+import { deleteImageFile } from '../utils/imageCleanup.js';
 
 export class Person {
   static async findByEmail(email) {
@@ -75,6 +76,20 @@ export class Person {
   }
 
   static async update(id, data) {
+    // If photo_url is being updated (including being cleared), get the old photo_url first to delete it
+    let oldPhotoUrl = null;
+    if (data.photo_url !== undefined) {
+      const currentPerson = await this.findById(id);
+      if (currentPerson && currentPerson.photo_url) {
+        oldPhotoUrl = currentPerson.photo_url;
+      }
+      // If photo_url is being set to null or empty string, we still want to delete the old photo
+      // Convert empty string to null for consistency
+      if (data.photo_url === '') {
+        data.photo_url = null;
+      }
+    }
+
     const fields = [];
     const values = [];
     let paramCount = 1;
@@ -130,6 +145,13 @@ export class Person {
       `UPDATE persons SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
       values
     );
+
+    // Delete old photo file if photo_url was changed
+    // This handles: replacing with new photo, clearing photo (null), or changing to different photo
+    if (oldPhotoUrl && oldPhotoUrl !== data.photo_url) {
+      await deleteImageFile(oldPhotoUrl);
+    }
+
     return result.rows[0];
   }
 
@@ -168,12 +190,22 @@ export class Person {
   }
 
   static async delete(personId) {
+    // Get the person's photo_url before deleting (so we can delete the image file)
+    const person = await this.findById(personId);
+    const photoUrl = person?.photo_url || null;
+
     // Delete relationships first (cascade should handle this, but being explicit)
     await pool.query('DELETE FROM relationships WHERE parent_id = $1 OR child_id = $1', [personId]);
     await pool.query('DELETE FROM marital_relationships WHERE person_a_id = $1 OR person_b_id = $1', [personId]);
     
     // Delete the person
     const result = await pool.query('DELETE FROM persons WHERE id = $1 RETURNING *', [personId]);
+
+    // Delete the associated image file if it exists
+    if (photoUrl) {
+      await deleteImageFile(photoUrl);
+    }
+
     return result.rows[0];
   }
 }

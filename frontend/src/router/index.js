@@ -98,6 +98,12 @@ const routes = [
     component: () => import('../views/Settings.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/error',
+    name: 'Error',
+    component: () => import('../views/ErrorView.vue'),
+    meta: { requiresAuth: false },
+  },
 ];
 
 const router = createRouter({
@@ -138,6 +144,19 @@ router.beforeEach(async (to, from, next) => {
   }
   
   next();
+});
+
+// Global error handler for route navigation errors
+router.onError((error) => {
+  console.error('Router error:', error);
+  // Store error details for the error view
+  const errorInfo = {
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+  };
+  localStorage.setItem('last_error', JSON.stringify(errorInfo));
+  router.push('/error');
 });
 
 export default router;

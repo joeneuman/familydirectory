@@ -10,6 +10,7 @@ import personsRoutes from './routes/persons.js';
 import preferencesRoutes from './routes/preferences.js';
 import settingsRoutes from './routes/settings.js';
 import uploadRoutes from './routes/upload.js';
+import errorsRoutes from './routes/errors.js';
 import { MagicLinkToken } from './models/MagicLinkToken.js';
 
 dotenv.config();
@@ -77,6 +78,7 @@ app.use('/api/persons', personsRoutes);
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/errors', errorsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

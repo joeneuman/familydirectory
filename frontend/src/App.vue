@@ -325,10 +325,14 @@ onMounted(() => {
     }
   });
   
-  // Fetch current user if authenticated
-  if (isAuthenticated.value && !currentUser.value) {
+  // Fetch current user if authenticated (but not on login page)
+  if (isAuthenticated.value && !currentUser.value && route.path !== '/login') {
     authStore.fetchCurrentUser().catch(error => {
       console.error('Failed to fetch current user:', error);
+      // If token is invalid (403), clear it
+      if (error.response?.status === 403) {
+        authStore.logout();
+      }
     });
   }
   
