@@ -47,11 +47,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useSiteSettingsStore } from '../stores/siteSettings';
 import axios from 'axios';
 import { getApiBaseURL } from '../utils/api.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const siteSettingsStore = useSiteSettingsStore();
 const currentUser = computed(() => authStore.currentUser);
 
 const editSiteName = ref('');
@@ -79,10 +81,14 @@ onMounted(async () => {
 async function fetchSiteName() {
   try {
     const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
-    editSiteName.value = response.data.siteName || 'Family Directory';
+    const name = response.data.siteName || 'Family Directory';
+    editSiteName.value = name;
+    // Update store immediately
+    siteSettingsStore.setSiteName(name);
   } catch (error) {
     console.error('Error fetching site name:', error);
     editSiteName.value = 'Family Directory';
+    siteSettingsStore.setSiteName('Family Directory');
   }
 }
 
@@ -113,6 +119,10 @@ async function saveSiteName() {
     await axios.post(`${getApiBaseURL()}/settings/site-name`, {
       value: editSiteName.value.trim()
     }, config);
+    
+    // Update store immediately so it reflects everywhere
+    siteSettingsStore.setSiteName(editSiteName.value.trim());
+    
     saveMessage.value = 'Site name saved successfully!';
     saveMessageType.value = 'success';
     

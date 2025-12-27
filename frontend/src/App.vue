@@ -184,12 +184,14 @@
 import { ref, computed, onMounted, watch, provide, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
+import { useSiteSettingsStore } from './stores/siteSettings';
 import axios from 'axios';
 import { getApiBaseURL } from './utils/api.js';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const siteSettingsStore = useSiteSettingsStore();
 
 const showMenu = ref(false);
 const menuContainer = ref(null);
@@ -197,19 +199,8 @@ const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUser = computed(() => authStore.currentUser);
 const isSmallScreen = ref(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
-// Site name management - fetch from API
-const siteName = ref('Family Directory');
-
-// Fetch site name from API
-async function fetchSiteName() {
-  try {
-    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
-    siteName.value = response.data.siteName || 'Family Directory';
-  } catch (error) {
-    console.error('Error fetching site name:', error);
-    siteName.value = 'Family Directory';
-  }
-}
+// Use site name from store (reactive)
+const siteName = computed(() => siteSettingsStore.siteName);
 
 // Directory controls state (shared with Directory component)
 // Persist view selection in localStorage
@@ -337,14 +328,7 @@ onMounted(() => {
   }
   
   // Fetch site name from API
-  fetchSiteName();
-});
-
-// Watch for route changes to refresh site name when leaving Settings page
-watch(() => route.path, (newPath, oldPath) => {
-  if (oldPath === '/settings' && newPath !== '/settings') {
-    fetchSiteName();
-  }
+  siteSettingsStore.fetchSiteName();
 });
 </script>
 

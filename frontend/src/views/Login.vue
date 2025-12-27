@@ -47,30 +47,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
-import { getApiBaseURL } from '../utils/api.js';
+import { useSiteSettingsStore } from '../stores/siteSettings';
 
 const route = useRoute();
+const siteSettingsStore = useSiteSettingsStore();
 const email = ref('');
 const message = ref('');
 const messageType = ref('');
 const loading = ref(false);
 
-// Site name management - fetch from API
-const siteName = ref('Family Directory');
-
-// Fetch site name from API
-async function fetchSiteName() {
-  try {
-    const response = await axios.get(`${getApiBaseURL()}/settings/site-name`);
-    siteName.value = response.data.siteName || 'Family Directory';
-  } catch (error) {
-    console.error('Error fetching site name:', error);
-    siteName.value = 'Family Directory';
-  }
-}
+// Use site name from store (reactive)
+const siteName = computed(() => siteSettingsStore.siteName);
 
 // Check for error query parameters on mount
 onMounted(() => {
@@ -80,7 +69,7 @@ onMounted(() => {
     messageType.value = 'error';
   }
   // Fetch site name from API
-  fetchSiteName();
+  siteSettingsStore.fetchSiteName();
 });
 
 async function handleSubmit() {
