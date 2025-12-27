@@ -23,6 +23,13 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     return null;
   }
 
+  // Check if they are spouses first (highest priority relationship)
+  const spouse = await Person.getSpouse(currentUserId);
+  if (spouse && spouse.id === targetPersonId) {
+    // They are spouses - return "Wife" or "Husband" based on target's gender
+    return targetPerson.gender === 'Female' ? 'Wife' : 'Husband';
+  }
+
   // Collect all person IDs we need (parents, grandparents, etc.)
   const personIdsToLoad = new Set([currentUserId, targetPersonId]);
   
