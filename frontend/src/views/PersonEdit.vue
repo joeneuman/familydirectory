@@ -702,7 +702,11 @@ async function handleSubmit() {
     // At least one must be selected (either a person or "Not listed here")
     if (formData.value.generation && formData.value.generation !== 'G1') {
       // Check if both are empty (not selected and not "NOT_LISTED")
-      if (!formData.value.mother_id && !formData.value.father_id) {
+      // Allow empty string, null, undefined, or "NOT_LISTED" as valid values
+      const motherSelected = formData.value.mother_id && formData.value.mother_id !== '';
+      const fatherSelected = formData.value.father_id && formData.value.father_id !== '';
+      
+      if (!motherSelected && !fatherSelected) {
         error.value = 'Please select a Mother or Father, or choose "Not listed here" for at least one';
         saving.value = false;
         return;
