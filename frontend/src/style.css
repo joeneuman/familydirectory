@@ -20,11 +20,11 @@ body {
 /* Friendly button styles */
 @layer components {
   .btn-primary {
-    @apply px-4 py-0.5 rounded-lg font-medium text-sm text-white bg-gradient-to-r from-warm-500 to-warm-600 hover:from-warm-600 hover:to-warm-700 focus:outline-none focus:ring-2 focus:ring-warm-500 focus:ring-offset-2 transition-all duration-200 shadow-soft hover:shadow-soft-lg;
+    @apply inline-flex items-center justify-center px-4 py-0.5 rounded-lg font-medium text-sm leading-tight text-white bg-gradient-to-r from-warm-500 to-warm-600 hover:from-warm-600 hover:to-warm-700 focus:outline-none focus:ring-2 focus:ring-warm-500 focus:ring-offset-2 transition-all duration-200 shadow-soft hover:shadow-soft-lg;
   }
   
   .btn-secondary {
-    @apply px-4 py-0.5 rounded-lg font-medium text-sm text-soft-700 bg-white hover:bg-soft-50 focus:outline-none focus:ring-2 focus:ring-warm-300 focus:ring-offset-2 transition-all duration-200 border border-soft-200 shadow-soft hover:shadow-soft-lg;
+    @apply inline-flex items-center justify-center px-4 py-0.5 rounded-lg font-medium text-sm leading-tight text-soft-700 bg-white hover:bg-soft-50 focus:outline-none focus:ring-2 focus:ring-warm-300 focus:ring-offset-2 transition-all duration-200 border border-soft-200 shadow-soft hover:shadow-soft-lg;
   }
   
   .card {
