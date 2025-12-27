@@ -54,32 +54,55 @@ export class Person {
       generation,
       photo_url,
       is_deceased,
-      primary_household_id
+      primary_household_id,
+      mother_id,
+      father_id
     } = data;
+
+    // Validate: mother_id and father_id are required except for G1
+    if (generation && generation !== 'G1') {
+      if (!mother_id && !father_id) {
+        throw new Error('Mother or Father must be specified for non-G1 persons');
+      }
+    }
 
     const result = await pool.query(
       `INSERT INTO persons (
         first_name, last_name, full_name, email, phone,
         address_line1, address_line2, city, state, postal_code, country,
         date_of_birth, age, wedding_anniversary_date, years_married,
-        generation, photo_url, is_deceased, primary_household_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        generation, photo_url, is_deceased, primary_household_id,
+        mother_id, father_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       RETURNING *`,
       [
         first_name, last_name, full_name, email, phone,
         address_line1, address_line2, city, state, postal_code, country || 'USA',
         date_of_birth, age, wedding_anniversary_date, years_married,
-        generation, photo_url, is_deceased || false, primary_household_id
+        generation, photo_url, is_deceased || false, primary_household_id,
+        mother_id || null, father_id || null
       ]
     );
     return result.rows[0];
   }
 
   static async update(id, data) {
+    // Validate: mother_id and father_id are required for non-G1
+    const currentPerson = await this.findById(id);
+    const generation = data.generation !== undefined ? data.generation : currentPerson?.generation;
+    
+    if (generation && generation !== 'G1') {
+      const motherId = data.mother_id !== undefined ? data.mother_id : currentPerson?.mother_id;
+      const fatherId = data.father_id !== undefined ? data.father_id : currentPerson?.father_id;
+      
+      if (!motherId && !fatherId) {
+        throw new Error('Mother or Father must be specified for non-G1 persons');
+      }
+    }
+
     // If photo_url is being updated (including being cleared), get the old photo_url first to delete it
     let oldPhotoUrl = null;
     if (data.photo_url !== undefined) {
-      const currentPerson = await this.findById(id);
       if (currentPerson && currentPerson.photo_url) {
         oldPhotoUrl = currentPerson.photo_url;
       }
@@ -100,7 +123,7 @@ export class Person {
       'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
       'date_of_birth', 'age', 'wedding_anniversary_date', 'years_married',
       'generation', 'photo_url', 'is_deceased', 'primary_household_id', 'is_admin',
-      'privacy_settings'
+      'privacy_settings', 'mother_id', 'father_id'
     ];
 
     for (const field of allowedFields) {

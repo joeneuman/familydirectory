@@ -44,6 +44,36 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
+            <div v-if="formData.generation && formData.generation !== 'G1'">
+              <label class="block text-sm font-medium text-gray-700">
+                Mother <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="formData.mother_id"
+                :required="formData.generation && formData.generation !== 'G1'"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Select Mother</option>
+                <option v-for="p in allPeople" :key="p.id" :value="p.id">
+                  {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                </option>
+              </select>
+            </div>
+            <div v-if="formData.generation && formData.generation !== 'G1'">
+              <label class="block text-sm font-medium text-gray-700">
+                Father <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="formData.father_id"
+                :required="formData.generation && formData.generation !== 'G1'"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Select Father</option>
+                <option v-for="p in allPeople" :key="p.id" :value="p.id">
+                  {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                </option>
+              </select>
+            </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Email</label>
               <input
@@ -242,7 +272,20 @@ const formData = ref({
   generation: '',
   photo_url: '',
   is_deceased: false,
+  mother_id: null,
+  father_id: null,
 });
+
+const allPeople = ref([]);
+
+async function fetchAllPeople() {
+  try {
+    const response = await axios.get(`${getApiBaseURL()}/persons`);
+    allPeople.value = response.data;
+  } catch (err) {
+    console.error('Error fetching people:', err);
+  }
+}
 
 onMounted(async () => {
   // Check if user is admin
@@ -256,6 +299,9 @@ onMounted(async () => {
     setTimeout(() => {
       router.push('/directory');
     }, 2000);
+  } else {
+    // Fetch all people for mother/father dropdowns
+    await fetchAllPeople();
   }
 });
 
@@ -304,6 +350,15 @@ async function handleSubmit() {
   error.value = null;
 
   try {
+    // Validate: mother_id and father_id are required for non-G1
+    if (formData.value.generation && formData.value.generation !== 'G1') {
+      if (!formData.value.mother_id && !formData.value.father_id) {
+        error.value = 'Mother or Father must be specified for non-G1 persons';
+        saving.value = false;
+        return;
+      }
+    }
+
     // Calculate age if date_of_birth is provided
     if (formData.value.date_of_birth) {
       try {

@@ -30,13 +30,23 @@
               <div v-if="person.is_deceased" class="text-red-600 font-medium">Deceased</div>
             </div>
           </div>
-          <div v-if="person.canEdit" class="flex-shrink-0">
+          <div v-if="person.canEdit" class="flex-shrink-0 flex gap-3">
             <router-link
               :to="`/person/${person.id}/edit`"
               class="btn-primary"
             >
               Edit Info
             </router-link>
+            <router-link
+              :to="`/person/${person.id}/privacy`"
+              class="btn-secondary"
+            >
+              Privacy Settings
+            </router-link>
+          </div>
+          <!-- Debug: Show if canEdit is false -->
+          <div v-else class="text-sm text-red-600 mt-2">
+            Debug: canEdit = {{ person.canEdit }}, user.id = {{ authStore.currentUser?.id }}, person.id = {{ person.id }}
           </div>
         </div>
 
@@ -172,8 +182,10 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { format, parseISO, subMonths } from 'date-fns';
 import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
+import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
+const authStore = useAuthStore();
 const person = ref(null);
 const loading = ref(true);
 

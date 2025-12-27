@@ -57,6 +57,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/person/:id/privacy',
+    name: 'PrivacySettings',
+    component: () => import('../views/PrivacySettings.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/print/options',
     name: 'PrintOptionsView',
     component: () => import('../views/PrintOptionsView.vue'),
