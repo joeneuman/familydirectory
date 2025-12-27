@@ -260,6 +260,18 @@
           </div>
 
 
+          <!-- Household/Relationships Link -->
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Household/Relationships</h2>
+            <p class="text-sm text-gray-600 mb-4">Manage household members, spouse, and parent relationships.</p>
+            <router-link
+              :to="`/person/${person.id}/household-relationships`"
+              class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200"
+            >
+              Household/Relationships
+            </router-link>
+          </div>
+
           <!-- Privacy Settings Link -->
           <div>
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Privacy Settings</h2>

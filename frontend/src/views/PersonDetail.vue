@@ -30,18 +30,12 @@
               <div v-if="person.is_deceased" class="text-red-600 font-medium">Deceased</div>
             </div>
           </div>
-          <div v-if="person.canEdit" class="flex-shrink-0 flex gap-2">
+          <div v-if="person.canEdit" class="flex-shrink-0">
             <router-link
               :to="`/person/${person.id}/edit`"
               class="btn-primary"
             >
               Edit
-            </router-link>
-            <router-link
-              :to="`/person/${person.id}/household-relationships`"
-              class="btn-primary"
-            >
-              Household/Relationships
             </router-link>
           </div>
         </div>
