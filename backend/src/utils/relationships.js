@@ -98,6 +98,38 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     }
   }
 
+  // In-law relationships through siblings
+  // If target has your parents as in-laws, they're married to your sibling/step-sibling
+  // Check if target's mother-in-law or father-in-law is one of your parents
+  let hasBiologicalParentAsInLaw = false;
+  let hasStepParentAsInLaw = false;
+  
+  for (const cp of currentUserParents) {
+    const isMotherInLaw = targetPersonFromMap.mother_id === cp.id && targetPersonFromMap.mother_relationship_type === 'in-law';
+    const isFatherInLaw = targetPersonFromMap.father_id === cp.id && targetPersonFromMap.father_relationship_type === 'in-law';
+    
+    if (isMotherInLaw || isFatherInLaw) {
+      // Check if this parent is biological or step for the current user
+      const isBiologicalForUser = (currentUserFromMap.mother_id === cp.id && currentUserFromMap.mother_relationship_type === 'biological') ||
+                                   (currentUserFromMap.father_id === cp.id && currentUserFromMap.father_relationship_type === 'biological');
+      if (isBiologicalForUser) {
+        hasBiologicalParentAsInLaw = true;
+      } else {
+        hasStepParentAsInLaw = true;
+      }
+    }
+  }
+  
+  if (hasBiologicalParentAsInLaw || hasStepParentAsInLaw) {
+    // If they have your biological parent as in-law, they're your sister-in-law (not step)
+    // Otherwise, they're your step-sister-in-law
+    if (hasBiologicalParentAsInLaw) {
+      return targetPersonFromMap.gender === 'Female' ? 'Sister-in-law' : 'Brother-in-law';
+    } else {
+      return targetPersonFromMap.gender === 'Female' ? 'Step-sister-in-law' : 'Step-brother-in-law';
+    }
+  }
+
   // Siblings (share at least one parent)
   // Check for biological siblings (share at least one biological parent)
   const sharedBiologicalParents = currentUserParents.filter(cp => 
