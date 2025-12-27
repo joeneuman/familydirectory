@@ -69,24 +69,32 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
   }
 
   // Direct parent-child relationships
-  // Check if target is current user's biological parent
+  // Check if target is current user's parent (biological, step, or in-law)
   if (currentUserParents.some(p => p.id === targetPersonId)) {
-    const isBiological = (currentUserFromMap.mother_id === targetPersonId && currentUserFromMap.mother_relationship_type === 'biological') ||
-                         (currentUserFromMap.father_id === targetPersonId && currentUserFromMap.father_relationship_type === 'biological');
-    if (isBiological) {
+    const motherRelationshipType = currentUserFromMap.mother_id === targetPersonId ? currentUserFromMap.mother_relationship_type : null;
+    const fatherRelationshipType = currentUserFromMap.father_id === targetPersonId ? currentUserFromMap.father_relationship_type : null;
+    const relationshipType = motherRelationshipType || fatherRelationshipType;
+    
+    if (relationshipType === 'in-law') {
+      return targetPersonFromMap.gender === 'Female' ? 'Mother-in-law' : 'Father-in-law';
+    } else if (relationshipType === 'biological') {
       return targetPersonFromMap.gender === 'Female' ? 'Mother' : 'Father';
     } else {
       return targetPersonFromMap.gender === 'Female' ? 'Stepmother' : 'Stepfather';
     }
   }
-  // Check if current user is target's biological parent
+  // Check if current user is target's parent (biological, step, or in-law)
   if (targetPersonParents.some(p => p.id === currentUserId)) {
-    const isBiological = (targetPersonFromMap.mother_id === currentUserId && targetPersonFromMap.mother_relationship_type === 'biological') ||
-                         (targetPersonFromMap.father_id === currentUserId && targetPersonFromMap.father_relationship_type === 'biological');
-    if (isBiological) {
-      return targetPersonFromMap.gender === 'Female' ? 'Daughter' : 'Son';
+    const motherRelationshipType = targetPersonFromMap.mother_id === currentUserId ? targetPersonFromMap.mother_relationship_type : null;
+    const fatherRelationshipType = targetPersonFromMap.father_id === currentUserId ? targetPersonFromMap.father_relationship_type : null;
+    const relationshipType = motherRelationshipType || fatherRelationshipType;
+    
+    if (relationshipType === 'in-law') {
+      return currentUserFromMap.gender === 'Female' ? 'Daughter-in-law' : 'Son-in-law';
+    } else if (relationshipType === 'biological') {
+      return currentUserFromMap.gender === 'Female' ? 'Daughter' : 'Son';
     } else {
-      return targetPersonFromMap.gender === 'Female' ? 'Stepdaughter' : 'Stepson';
+      return currentUserFromMap.gender === 'Female' ? 'Stepdaughter' : 'Stepson';
     }
   }
 
