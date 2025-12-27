@@ -4,8 +4,13 @@
       <div class="bg-white rounded-2xl shadow-soft-lg border border-soft-200 p-8 sm:p-10">
         <!-- Error Icon -->
         <div class="text-center mb-6">
-          <div class="inline-flex items-center justify-center mb-4">
-            <img src="/images/error.gif" alt="Error" class="max-w-full h-auto" style="max-width: 600px; max-height: 600px;" />
+          <div class="flex items-center justify-center mb-4 px-2 sm:px-4">
+            <img 
+              src="/images/error.gif" 
+              alt="Error" 
+              class="w-full h-auto object-contain max-w-[90vw] sm:max-w-[500px] md:max-w-[600px]"
+              style="max-height: 90vw;"
+            />
           </div>
           <h1 class="text-3xl font-bold text-warm-800 mb-2">Something Went Wrong</h1>
           <p class="text-soft-600">We're sorry, but an error has occurred. Please help us fix it by providing details below.</p>
