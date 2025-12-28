@@ -307,6 +307,9 @@ function buildTreeForG1(g1Person) {
     }
   }
   
+  // Track which people have been added as primary nodes (to avoid duplicates for married couples)
+  const addedAsPrimary = new Set();
+  
   // Set Y positions and create final nodes/lines
   let currentY = GENERATION_OFFSET;
   
@@ -328,6 +331,28 @@ function buildTreeForG1(g1Person) {
         // Check if person has a spouse
         const spouse = node.person.spouse;
         const hasSpouse = !!spouse;
+        
+        // If this person has a spouse, check if the spouse is already added as a primary node
+        if (hasSpouse && spouse && addedAsPrimary.has(spouse.id)) {
+          // Spouse is already a primary node, skip adding this person
+          // They will be shown as spouse on the other node
+          return;
+        }
+        
+        // Add this person as primary node
+        addedAsPrimary.add(node.person.id);
+        
+        // If spouse exists and is also in the tree structure, mark spouse as added too
+        // and set spouse's position to match this person's position (so lines connect correctly)
+        if (hasSpouse && spouse) {
+          const spouseInTree = treeStructure.has(spouse.id);
+          if (spouseInTree) {
+            addedAsPrimary.add(spouse.id);
+            // Set spouse's position to match this person's position
+            // This ensures lines from spouse's children connect to the correct location
+            nodePositions.set(spouse.id, { x: pos.x, y: currentY });
+          }
+        }
         
         nodes.push({
           person: node.person,
