@@ -49,6 +49,7 @@
               <option value="name">Name (A-Z)</option>
               <option value="household">Household</option>
               <option value="next_event">Next Event</option>
+              <option value="fam_tree">Fam Tree</option>
               <option value="age_asc">Youngest</option>
               <option value="age_desc">Oldest</option>
               <option value="generation">Generation</option>

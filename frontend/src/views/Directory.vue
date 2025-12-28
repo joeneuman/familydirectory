@@ -6,12 +6,16 @@
       <div class="text-soft-600">Loading...</div>
     </div>
 
-    <div v-else-if="sortBy !== 'next_event' && ((sortBy === 'household' && householdsWithMembers.length === 0 && personsWithoutHousehold.length === 0) || (sortBy !== 'household' && filteredPersons.length === 0))" class="text-center py-12">
+    <div v-else-if="sortBy !== 'next_event' && sortBy !== 'fam_tree' && ((sortBy === 'household' && householdsWithMembers.length === 0 && personsWithoutHousehold.length === 0) || (sortBy !== 'household' && filteredPersons.length === 0))" class="text-center py-12">
       <div class="text-soft-600">No people found</div>
     </div>
 
     <div v-else-if="sortBy === 'next_event' && scheduleView.length === 0" class="text-center py-12">
       <div class="text-soft-600">No upcoming events in the next 12 months</div>
+    </div>
+
+    <div v-else-if="sortBy === 'fam_tree'">
+      <FamTree />
     </div>
 
     <div v-else class="space-y-4">
@@ -535,6 +539,7 @@
 import { ref, computed, onMounted, watch, inject } from 'vue';
 import axios from 'axios';
 import { parseISO, format, subMonths } from 'date-fns';
+import FamTree from './FamTree.vue';
 import { getApiBaseURL, getPhotoURL } from '../utils/api.js';
 
 // Inject shared state from App.vue
@@ -642,6 +647,19 @@ const defaultDisplayFiltersByView = {
     household_name: false,
     relationship: false,
   },
+  fam_tree: {
+    photo: true,
+    email: false,
+    phone: false,
+    address: false,
+    generation: true,
+    age: false,
+    birthday: false,
+    anniversary: false,
+    years_married: false,
+    household_name: false,
+    relationship: false,
+  },
 };
 
 // Fallback default (used if view type not found in defaults)
@@ -668,6 +686,7 @@ const currentViewName = computed(() => {
   const viewNames = {
     household: 'Household',
     next_event: 'Next Event',
+    fam_tree: 'Fam Tree',
     age_asc: 'Youngest View',
     age_desc: 'Oldest View',
     generation: 'Generation',
