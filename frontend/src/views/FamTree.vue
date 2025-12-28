@@ -152,11 +152,18 @@ const treeData = computed(() => {
   if (!persons.value || persons.value.length === 0) return [];
 
   // Group people by G1 (root ancestors)
-  const g1People = persons.value.filter(p => p.generation === 'G1');
+  let g1People = persons.value.filter(p => p.generation === 'G1');
+  
+  // Filter to only show Terry Collins tree, exclude Mounty
+  g1People = g1People.filter(p => {
+    const fullName = (p.full_name || `${p.first_name} ${p.last_name}`).toLowerCase();
+    // Include Terry Collins, exclude Mounty
+    return fullName.includes('terry') && fullName.includes('collins');
+  });
   
   if (g1People.length === 0) return [];
 
-  // Build tree for each G1
+  // Build tree for each G1 (should only be Terry Collins now)
   return g1People.map(g1 => {
     const tree = buildTreeForG1(g1);
     return {
