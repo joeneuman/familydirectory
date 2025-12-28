@@ -53,35 +53,77 @@
                 left: `${node.x}px`,
                 top: `${node.y}px`,
                 transform: 'translate(-50%, -50%)',
-                width: '200px'
+                width: node.hasSpouse ? '240px' : '160px'
               }"
               class="person-node"
             >
-              <router-link
-                :to="`/person/${node.person.id}`"
-                class="block text-center p-3 bg-white rounded-lg shadow-md border-2 border-warm-300 hover:border-warm-500 hover:shadow-lg transition-all duration-200"
-              >
-                <img
-                  v-if="node.person.photo_url"
-                  :src="getPhotoURL(node.person.photo_url, node.person.id)"
-                  :alt="node.person.full_name || `${node.person.first_name} ${node.person.last_name}`"
-                  class="w-16 h-16 rounded-full object-cover mx-auto mb-2 border-2 border-warm-200"
-                />
-                <div
-                  v-else
-                  class="w-16 h-16 rounded-full bg-warm-200 mx-auto mb-2 flex items-center justify-center"
-                >
-                  <span class="text-warm-600 text-2xl font-bold">
-                    {{ (node.person.full_name || `${node.person.first_name} ${node.person.last_name}`).charAt(0).toUpperCase() }}
+              <div class="text-center">
+                <!-- Photos - show both side by side for married couples -->
+                <div class="mb-2 flex justify-center">
+                  <div v-if="node.hasSpouse && node.spouse" class="flex -space-x-2">
+                    <!-- Main person photo -->
+                    <router-link :to="`/person/${node.person.id}`" class="block">
+                      <img
+                        v-if="node.person.photo_url"
+                        :src="getPhotoURL(node.person.photo_url, node.person.id)"
+                        :alt="node.person.full_name || `${node.person.first_name} ${node.person.last_name}`"
+                        class="w-16 h-16 rounded-full object-cover border-2 border-white"
+                      />
+                      <div
+                        v-else
+                        class="w-16 h-16 rounded-full bg-warm-200 border-2 border-white flex items-center justify-center"
+                      >
+                        <span class="text-warm-600 text-xl font-bold">
+                          {{ (node.person.full_name || `${node.person.first_name} ${node.person.last_name}`).charAt(0).toUpperCase() }}
+                        </span>
+                      </div>
+                    </router-link>
+                    <!-- Spouse photo -->
+                    <router-link :to="`/person/${node.spouse.id}`" class="block">
+                      <img
+                        v-if="node.spouse.photo_url"
+                        :src="getPhotoURL(node.spouse.photo_url, node.spouse.id)"
+                        :alt="node.spouse.full_name || `${node.spouse.first_name} ${node.spouse.last_name}`"
+                        class="w-16 h-16 rounded-full object-cover border-2 border-white"
+                      />
+                      <div
+                        v-else
+                        class="w-16 h-16 rounded-full bg-warm-200 border-2 border-white flex items-center justify-center"
+                      >
+                        <span class="text-warm-600 text-xl font-bold">
+                          {{ (node.spouse.full_name || `${node.spouse.first_name} ${node.spouse.last_name}`).charAt(0).toUpperCase() }}
+                        </span>
+                      </div>
+                    </router-link>
+                  </div>
+                  <!-- Single photo for unmarried -->
+                  <router-link v-else :to="`/person/${node.person.id}`" class="block">
+                    <img
+                      v-if="node.person.photo_url"
+                      :src="getPhotoURL(node.person.photo_url, node.person.id)"
+                      :alt="node.person.full_name || `${node.person.first_name} ${node.person.last_name}`"
+                      class="w-16 h-16 rounded-full object-cover"
+                    />
+                    <div
+                      v-else
+                      class="w-16 h-16 rounded-full bg-warm-200 flex items-center justify-center"
+                    >
+                      <span class="text-warm-600 text-xl font-bold">
+                        {{ (node.person.full_name || `${node.person.first_name} ${node.person.last_name}`).charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+                  </router-link>
+                </div>
+                <!-- Names -->
+                <div class="text-sm font-semibold text-warm-700">
+                  <router-link :to="`/person/${node.person.id}`" class="hover:text-warm-800">
+                    {{ node.person.full_name || `${node.person.first_name} ${node.person.last_name}` }}
+                  </router-link>
+                  <span v-if="node.hasSpouse && node.spouse" class="block text-xs text-soft-600 mt-1">
+                    & {{ node.spouse.full_name || `${node.spouse.first_name} ${node.spouse.last_name}` }}
                   </span>
                 </div>
-                <div class="text-sm font-semibold text-warm-700">
-                  {{ node.person.full_name || `${node.person.first_name} ${node.person.last_name}` }}
-                </div>
-                <div v-if="node.person.generation" class="text-xs text-soft-600 mt-1">
-                  {{ node.person.generation }}
-                </div>
-              </router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -100,9 +142,9 @@ const loading = ref(true);
 
 // Tree layout configuration
 const NODE_WIDTH = 200;
-const NODE_HEIGHT = 120;
+const NODE_HEIGHT = 100; // Reduced since we removed card padding
 const HORIZONTAL_SPACING = 250;
-const VERTICAL_SPACING = 180;
+const VERTICAL_SPACING = 160; // Reduced spacing
 const GENERATION_OFFSET = 100; // Top padding for G1
 
 // Build family tree data structure
@@ -283,24 +325,47 @@ function buildTreeForG1(g1Person) {
       if (pos) {
         pos.y = currentY;
         
+        // Check if person has a spouse
+        const spouse = node.person.spouse;
+        const hasSpouse = !!spouse;
+        
         nodes.push({
           person: node.person,
+          spouse: spouse,
+          hasSpouse: hasSpouse,
           x: pos.x,
           y: pos.y
         });
         
-        // Draw line to parent
+        // Draw line to biological parent only
         const person = node.person;
-        if (person.mother_id || person.father_id) {
-          const parentId = person.mother_id || person.father_id;
-          const parentPos = nodePositions.get(parentId);
+        let biologicalParentId = null;
+        
+        // Check if mother is biological
+        if (person.mother_id && person.mother_relationship_type === 'biological') {
+          biologicalParentId = person.mother_id;
+        }
+        // Check if father is biological (only if no biological mother)
+        else if (person.father_id && person.father_relationship_type === 'biological') {
+          biologicalParentId = person.father_id;
+        }
+        // Fallback: if relationship type not set, assume biological
+        else if (person.mother_id && (!person.mother_relationship_type || person.mother_relationship_type === 'biological')) {
+          biologicalParentId = person.mother_id;
+        }
+        else if (person.father_id && (!person.father_relationship_type || person.father_relationship_type === 'biological')) {
+          biologicalParentId = person.father_id;
+        }
+        
+        if (biologicalParentId) {
+          const parentPos = nodePositions.get(biologicalParentId);
           
           if (parentPos && parentPos.y > 0) {
             lines.push({
               x1: parentPos.x,
-              y1: parentPos.y + (NODE_HEIGHT / 2),
+              y1: parentPos.y + 40, // Below photo
               x2: pos.x,
-              y2: pos.y - (NODE_HEIGHT / 2)
+              y2: pos.y - 40 // Above photo
             });
           }
         }
@@ -319,7 +384,29 @@ function buildTreeForG1(g1Person) {
 async function fetchPersons() {
   try {
     const response = await axios.get(`${getApiBaseURL()}/persons`);
-    persons.value = response.data;
+    const personsList = response.data;
+    
+    // Fetch spouse data for all persons (batch in chunks to avoid overwhelming the server)
+    const chunkSize = 10;
+    const enrichedPersons = [];
+    
+    for (let i = 0; i < personsList.length; i += chunkSize) {
+      const chunk = personsList.slice(i, i + chunkSize);
+      const chunkResults = await Promise.all(
+        chunk.map(async (person) => {
+          try {
+            const personResponse = await axios.get(`${getApiBaseURL()}/persons/${person.id}`);
+            return personResponse.data;
+          } catch (error) {
+            // If individual fetch fails, return person without spouse
+            return person;
+          }
+        })
+      );
+      enrichedPersons.push(...chunkResults);
+    }
+    
+    persons.value = enrichedPersons;
   } catch (error) {
     console.error('Error fetching persons:', error);
   } finally {
