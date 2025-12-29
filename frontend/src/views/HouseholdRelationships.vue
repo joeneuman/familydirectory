@@ -11,7 +11,7 @@
         </router-link>
       </div>
 
-      <div class="card">
+      <div class="card pb-[50px]">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Household/Relationships</h1>
 
         <!-- Error Message -->
@@ -37,7 +37,7 @@
               >
                 <option :value="null">None</option>
                 <option
-                  v-for="p in allPeople.filter(p => p.id !== person.id)"
+                  v-for="p in sortPeopleByName(allPeople.filter(p => p.id !== person.id))"
                   :key="p.id"
                   :value="p.id"
                 >
@@ -52,7 +52,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Ex-Spouse (Optional)</label>
               <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-4">
                 <div
-                  v-for="p in allPeople.filter(p => p.id !== person.id && p.id !== selectedSpouse)"
+                  v-for="p in sortPeopleByName(allPeople.filter(p => p.id !== person.id && p.id !== selectedSpouse))"
                   :key="p.id"
                   class="flex items-center py-2 border-b border-gray-100 last:border-0"
                 >
@@ -81,7 +81,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Household Members</label>
               <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4">
                 <div
-                  v-for="p in allPeople"
+                  v-for="p in sortPeopleByName(allPeople)"
                   :key="p.id"
                   class="flex items-center py-2 border-b border-gray-100 last:border-0"
                 >
@@ -261,13 +261,30 @@ const formData = ref({
 const originalFormData = ref(null);
 const originalHouseholdData = ref(null);
 
+// Helper function to sort people alphabetically by name
+function sortPeopleByName(people) {
+  return [...people].sort((a, b) => {
+    const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+    const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+}
+
 // Computed properties for mother/father dropdowns
 const availableMothers = computed(() => {
-  return allPeople.value.filter(p => p.id !== person.value?.id);
+  const filtered = allPeople.value.filter(p => 
+    p.id !== person.value?.id && 
+    p.gender === 'Female'
+  );
+  return sortPeopleByName(filtered);
 });
 
 const availableFathers = computed(() => {
-  return allPeople.value.filter(p => p.id !== person.value?.id);
+  const filtered = allPeople.value.filter(p => 
+    p.id !== person.value?.id && 
+    p.gender === 'Male'
+  );
+  return sortPeopleByName(filtered);
 });
 
 // Check if form data has changed

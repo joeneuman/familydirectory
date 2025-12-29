@@ -68,7 +68,7 @@
               >
                 <option value="">Select Mother</option>
                 <option value="NOT_LISTED">Not listed here</option>
-                <option v-for="p in allPeople" :key="p.id" :value="p.id">
+                <option v-for="p in availableMothers" :key="p.id" :value="p.id">
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
@@ -96,7 +96,7 @@
               >
                 <option value="">Select Father</option>
                 <option value="NOT_LISTED">Not listed here</option>
-                <option v-for="p in allPeople" :key="p.id" :value="p.id">
+                <option v-for="p in availableFathers" :key="p.id" :value="p.id">
                   {{ p.full_name || `${p.first_name} ${p.last_name}` }}
                 </option>
               </select>
@@ -283,7 +283,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { differenceInYears, parseISO } from 'date-fns';
@@ -320,6 +320,26 @@ const formData = ref({
 });
 
 const allPeople = ref([]);
+
+// Helper function to sort people alphabetically by name
+function sortPeopleByName(people) {
+  return [...people].sort((a, b) => {
+    const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+    const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+}
+
+// Computed properties for mother/father dropdowns
+const availableMothers = computed(() => {
+  const filtered = allPeople.value.filter(p => p.gender === 'Female');
+  return sortPeopleByName(filtered);
+});
+
+const availableFathers = computed(() => {
+  const filtered = allPeople.value.filter(p => p.gender === 'Male');
+  return sortPeopleByName(filtered);
+});
 
 async function fetchAllPeople() {
   try {

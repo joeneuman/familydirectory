@@ -697,6 +697,11 @@ const currentViewName = computed(() => {
 
 // Load saved filters from backend for current view or use defaults
 async function loadDisplayFilters() {
+  // Skip loading filters for fam_tree view - it doesn't use display filters
+  if (currentViewType.value === 'fam_tree') {
+    return { ...(defaultDisplayFiltersByView[currentViewType.value] || defaultDisplayFilters) };
+  }
+  
   const viewKey = `directoryDisplayFilters_${currentViewType.value}`;
   try {
     const response = await axios.get(`${getApiBaseURL()}/preferences/${viewKey}`);
