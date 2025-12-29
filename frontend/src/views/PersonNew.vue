@@ -332,12 +332,12 @@ function sortPeopleByName(people) {
 
 // Computed properties for mother/father dropdowns
 const availableMothers = computed(() => {
-  const filtered = allPeople.value.filter(p => p.gender === 'Female');
+  const filtered = allPeople.value.filter(p => p.gender !== 'Male'); // Exclude only those marked as Male
   return sortPeopleByName(filtered);
 });
 
 const availableFathers = computed(() => {
-  const filtered = allPeople.value.filter(p => p.gender === 'Male');
+  const filtered = allPeople.value.filter(p => p.gender !== 'Female'); // Exclude only those marked as Female
   return sortPeopleByName(filtered);
 });
 

@@ -274,7 +274,7 @@ function sortPeopleByName(people) {
 const availableMothers = computed(() => {
   const filtered = allPeople.value.filter(p => 
     p.id !== person.value?.id && 
-    p.gender === 'Female'
+    p.gender !== 'Male' // Exclude only those marked as Male, include Female and null/undefined
   );
   return sortPeopleByName(filtered);
 });
@@ -282,7 +282,7 @@ const availableMothers = computed(() => {
 const availableFathers = computed(() => {
   const filtered = allPeople.value.filter(p => 
     p.id !== person.value?.id && 
-    p.gender === 'Male'
+    p.gender !== 'Female' // Exclude only those marked as Female, include Male and null/undefined
   );
   return sortPeopleByName(filtered);
 });

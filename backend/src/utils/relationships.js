@@ -242,6 +242,56 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     }
   }
 
+  // Great-Niece/Great-Nephew relationships
+  // If target's parent is current user's niece/nephew (i.e., target's grandparent is current user's sibling)
+  // We need to load the target's grandparents
+  const targetGrandparentIds = new Set();
+  targetPersonParents.forEach(p => {
+    if (p.mother_id) targetGrandparentIds.add(p.mother_id);
+    if (p.father_id) targetGrandparentIds.add(p.father_id);
+  });
+
+  // Load target's grandparents if not already loaded
+  if (targetGrandparentIds.size > 0) {
+    const targetGrandparentArray = Array.from(targetGrandparentIds);
+    const targetGrandparentResult = await pool.query(
+      `SELECT * FROM persons WHERE id = ANY($1::uuid[])`,
+      [targetGrandparentArray]
+    );
+    targetGrandparentResult.rows.forEach(p => peopleMap.set(p.id, p));
+  }
+
+  // Check if any of target's grandparents are current user's siblings
+  for (const targetParent of targetPersonParents) {
+    const targetParentParents = [];
+    if (targetParent.mother_id && peopleMap.has(targetParent.mother_id)) {
+      targetParentParents.push(peopleMap.get(targetParent.mother_id));
+    }
+    if (targetParent.father_id && peopleMap.has(targetParent.father_id)) {
+      targetParentParents.push(peopleMap.get(targetParent.father_id));
+    }
+    
+    // Check if target's grandparent shares a parent with current user (making them siblings)
+    // This means target's parent is current user's niece/nephew, so target is great-niece/nephew
+    for (const targetGrandparent of targetParentParents) {
+      const targetGrandparentParents = [];
+      if (targetGrandparent.mother_id && peopleMap.has(targetGrandparent.mother_id)) {
+        targetGrandparentParents.push(peopleMap.get(targetGrandparent.mother_id));
+      }
+      if (targetGrandparent.father_id && peopleMap.has(targetGrandparent.father_id)) {
+        targetGrandparentParents.push(peopleMap.get(targetGrandparent.father_id));
+      }
+      
+      const isSibling = currentUserParents.some(cp => 
+        targetGrandparentParents.some(tgpp => tgpp.id === cp.id)
+      );
+      
+      if (isSibling) {
+        return targetPersonFromMap.gender === 'Female' ? 'Great-niece' : 'Great-nephew';
+      }
+    }
+  }
+
   // If current user's parent is target's sibling
   for (const currentParent of currentUserParents) {
     const currentParentParents = [];
