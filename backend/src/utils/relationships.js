@@ -30,6 +30,13 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     return targetPerson.gender === 'Female' ? 'Wife' : 'Husband';
   }
 
+  // Check if they are ex-spouses (second highest priority, before in-law relationships)
+  const exSpouses = await Person.getExSpouses(currentUserId);
+  if (exSpouses && exSpouses.some(ex => ex.id === targetPersonId)) {
+    // They are ex-spouses - return "Ex-wife" or "Ex-husband" based on target's gender
+    return targetPerson.gender === 'Female' ? 'Ex-wife' : 'Ex-husband';
+  }
+
   // Collect all person IDs we need (parents, grandparents, etc.)
   const personIdsToLoad = new Set([currentUserId, targetPersonId]);
   
