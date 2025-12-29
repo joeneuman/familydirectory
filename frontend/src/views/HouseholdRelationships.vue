@@ -47,6 +47,35 @@
               <p class="mt-1 text-xs text-gray-500">Select a spouse to show them directly under you in the family view and combine anniversaries in the event view.</p>
             </div>
 
+            <!-- Ex-Spouse Selection -->
+            <div class="mb-4 pb-4 border-b border-gray-200">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Ex-Spouse (Optional)</label>
+              <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-4">
+                <div
+                  v-for="p in allPeople.filter(p => p.id !== person.id && p.id !== selectedSpouse)"
+                  :key="p.id"
+                  class="flex items-center py-2 border-b border-gray-100 last:border-0"
+                >
+                  <input
+                    :id="`ex-spouse-${p.id}`"
+                    type="checkbox"
+                    :value="p.id"
+                    v-model="selectedExSpouses"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label 
+                    :for="`ex-spouse-${p.id}`" 
+                    class="ml-3 flex-1 cursor-pointer"
+                  >
+                    <span class="text-sm font-medium text-gray-900">
+                      {{ p.full_name || `${p.first_name} ${p.last_name}` }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">Select one or more ex-spouses to track previous marriages.</p>
+            </div>
+
             <!-- Household Members Selection -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Household Members</label>
@@ -218,6 +247,7 @@ const error = ref(null);
 const allPeople = ref([]);
 const selectedHouseholdMembers = ref([]);
 const selectedSpouse = ref(null);
+const selectedExSpouses = ref([]);
 const loadingPeople = ref(false);
 const savingHousehold = ref(false);
 
@@ -265,9 +295,13 @@ const hasHouseholdChanges = computed(() => {
   const currentMembers = [...selectedHouseholdMembers.value].sort();
   const originalMembers = [...originalHouseholdData.value.members].sort();
   
+  const currentExSpouses = [...selectedExSpouses.value].sort();
+  const originalExSpouses = [...(originalHouseholdData.value.exSpouses || [])].sort();
+  
   return (
     currentSpouse !== originalSpouse ||
-    JSON.stringify(currentMembers) !== JSON.stringify(originalMembers)
+    JSON.stringify(currentMembers) !== JSON.stringify(originalMembers) ||
+    JSON.stringify(currentExSpouses) !== JSON.stringify(originalExSpouses)
   );
 });
 
@@ -311,10 +345,16 @@ async function initializeHouseholdData() {
     selectedSpouse.value = person.value.spouse.id;
   }
   
+  // Pre-select current ex-spouses if exist
+  if (person.value.exSpouses && Array.isArray(person.value.exSpouses)) {
+    selectedExSpouses.value = person.value.exSpouses.map(ex => ex.id);
+  }
+  
   // Store original household data for change detection
   originalHouseholdData.value = {
     spouse: selectedSpouse.value,
     members: [...selectedHouseholdMembers.value],
+    exSpouses: [...selectedExSpouses.value],
   };
 }
 
@@ -396,6 +436,11 @@ async function fetchAllPeople() {
     if (person.value.spouse) {
       selectedSpouse.value = person.value.spouse.id;
     }
+    
+    // Pre-select current ex-spouses if exist
+    if (person.value.exSpouses && Array.isArray(person.value.exSpouses)) {
+      selectedExSpouses.value = person.value.exSpouses.map(ex => ex.id);
+    }
   } catch (error) {
     console.error('Error fetching people:', error);
   } finally {
@@ -424,6 +469,11 @@ async function saveHousehold() {
       await axios.delete(`${getApiBaseURL()}/persons/${person.value.id}/spouse`);
     }
 
+    // Save ex-spouses
+    await axios.post(`${getApiBaseURL()}/persons/${person.value.id}/set-ex-spouses`, {
+      exSpouseIds: selectedExSpouses.value || [],
+    });
+
     await fetchPerson();
     await initializeHouseholdData();
   } catch (error) {
@@ -450,6 +500,13 @@ async function removeFromHousehold() {
     alert(error.response?.data?.error || 'Failed to remove from household');
   }
 }
+
+// Watch for spouse changes and remove from ex-spouses if selected
+watch(selectedSpouse, (newSpouse) => {
+  if (newSpouse && selectedExSpouses.value.includes(newSpouse)) {
+    selectedExSpouses.value = selectedExSpouses.value.filter(id => id !== newSpouse);
+  }
+});
 
 onMounted(async () => {
   if (!authStore.currentUser) {

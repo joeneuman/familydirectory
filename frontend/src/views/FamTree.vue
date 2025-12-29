@@ -154,11 +154,12 @@ const treeData = computed(() => {
   // Group people by G1 (root ancestors)
   let g1People = persons.value.filter(p => p.generation === 'G1');
   
-  // Filter to only show Terry Collins tree, exclude Mounty
+  // Filter to only show Terry Collins tree, exclude Maunty/Mounty
   g1People = g1People.filter(p => {
     const fullName = (p.full_name || `${p.first_name} ${p.last_name}`).toLowerCase();
-    // Include Terry Collins, exclude Mounty
-    return fullName.includes('terry') && fullName.includes('collins');
+    // Include Terry Collins, exclude Maunty/Mounty
+    const isMaunty = fullName.includes('maunty') || fullName.includes('mounty');
+    return fullName.includes('terry') && fullName.includes('collins') && !isMaunty;
   });
   
   if (g1People.length === 0) return [];

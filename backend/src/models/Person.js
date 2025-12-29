@@ -230,6 +230,20 @@ export class Person {
     return result.rows[0] || null;
   }
 
+  static async getExSpouses(personId) {
+    const result = await pool.query(
+      `SELECT p.* FROM persons p
+       INNER JOIN marital_relationships mr ON (
+         (mr.person_a_id = p.id AND mr.person_b_id = $1) OR
+         (mr.person_b_id = p.id AND mr.person_a_id = $1)
+       )
+       WHERE mr.divorce_date IS NOT NULL
+       ORDER BY mr.divorce_date DESC`,
+      [personId]
+    );
+    return result.rows;
+  }
+
   static async getParents(personId) {
     const result = await pool.query(
       `SELECT p.* FROM persons p

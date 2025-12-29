@@ -381,6 +381,7 @@ router.get('/:id', async (req, res) => {
 
     // Get related people
     const spouse = await Person.getSpouse(person.id);
+    const exSpouses = await Person.getExSpouses(person.id);
     const parents = await Person.getParents(person.id);
     const children = await Person.getChildren(person.id);
 
@@ -483,6 +484,7 @@ router.get('/:id', async (req, res) => {
       age: calculatedAge,
       years_married: calculatedYearsMarried,
       spouse,
+      exSpouses,
       parents,
       children,
       canEdit: hasEditPermission,
@@ -821,6 +823,49 @@ router.delete('/:id/spouse', async (req, res) => {
   } catch (error) {
     console.error('Error removing spouse:', error);
     res.status(500).json({ error: 'Failed to remove spouse relationship' });
+  }
+});
+
+// Set ex-spouse relationships
+router.post('/:id/set-ex-spouses', async (req, res) => {
+  try {
+    const personId = req.params.id;
+    const { exSpouseIds } = req.body;
+
+    if (!Array.isArray(exSpouseIds)) {
+      return res.status(400).json({ error: 'exSpouseIds must be an array' });
+    }
+
+    // Check if person exists
+    const person = await Person.findById(personId);
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    // Check edit permission
+    const hasEditPermission = await canEdit(req.user.id, personId);
+    if (!hasEditPermission) {
+      return res.status(403).json({ error: 'You do not have permission to edit this person' });
+    }
+
+    // Validate all ex-spouse IDs exist
+    for (const exSpouseId of exSpouseIds) {
+      const exSpouse = await Person.findById(exSpouseId);
+      if (!exSpouse) {
+        return res.status(404).json({ error: `Ex-spouse with ID ${exSpouseId} not found` });
+      }
+      if (exSpouseId === personId) {
+        return res.status(400).json({ error: 'Cannot set self as ex-spouse' });
+      }
+    }
+
+    // Set the ex-spouse relationships
+    await MaritalRelationship.setExSpouses(personId, exSpouseIds);
+
+    res.json({ success: true, message: 'Ex-spouse relationships set successfully' });
+  } catch (error) {
+    console.error('Error setting ex-spouses:', error);
+    res.status(500).json({ error: 'Failed to set ex-spouse relationships' });
   }
 });
 
