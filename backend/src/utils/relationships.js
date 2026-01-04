@@ -242,6 +242,60 @@ export async function calculateRelationship(currentUserId, targetPersonId) {
     }
   }
 
+  // Nephew-in-law/Niece-in-law relationships
+  // If target's spouse is current user's niece/nephew
+  const targetSpouse = await Person.getSpouse(targetPersonId);
+  if (targetSpouse) {
+    // Check if target's spouse is your niece/nephew
+    const spouseParents = [];
+    if (targetSpouse.mother_id) {
+      const spouseMotherResult = await pool.query('SELECT * FROM persons WHERE id = $1', [targetSpouse.mother_id]);
+      if (spouseMotherResult.rows.length > 0) {
+        spouseParents.push(spouseMotherResult.rows[0]);
+        peopleMap.set(targetSpouse.mother_id, spouseMotherResult.rows[0]);
+      }
+    }
+    if (targetSpouse.father_id) {
+      const spouseFatherResult = await pool.query('SELECT * FROM persons WHERE id = $1', [targetSpouse.father_id]);
+      if (spouseFatherResult.rows.length > 0) {
+        spouseParents.push(spouseFatherResult.rows[0]);
+        peopleMap.set(targetSpouse.father_id, spouseFatherResult.rows[0]);
+      }
+    }
+    
+    // Check if target's spouse's parent is current user's sibling
+    for (const spouseParent of spouseParents) {
+      const spouseParentParents = [];
+      if (spouseParent.mother_id && peopleMap.has(spouseParent.mother_id)) {
+        spouseParentParents.push(peopleMap.get(spouseParent.mother_id));
+      } else if (spouseParent.mother_id) {
+        const result = await pool.query('SELECT * FROM persons WHERE id = $1', [spouseParent.mother_id]);
+        if (result.rows.length > 0) {
+          spouseParentParents.push(result.rows[0]);
+          peopleMap.set(spouseParent.mother_id, result.rows[0]);
+        }
+      }
+      if (spouseParent.father_id && peopleMap.has(spouseParent.father_id)) {
+        spouseParentParents.push(peopleMap.get(spouseParent.father_id));
+      } else if (spouseParent.father_id) {
+        const result = await pool.query('SELECT * FROM persons WHERE id = $1', [spouseParent.father_id]);
+        if (result.rows.length > 0) {
+          spouseParentParents.push(result.rows[0]);
+          peopleMap.set(spouseParent.father_id, result.rows[0]);
+        }
+      }
+      
+      // Check if spouse's parent shares a parent with current user (making them siblings)
+      const isSibling = currentUserParents.some(cp => 
+        spouseParentParents.some(spp => spp.id === cp.id)
+      );
+      
+      if (isSibling) {
+        return targetPersonFromMap.gender === 'Female' ? 'Niece-in-law' : 'Nephew-in-law';
+      }
+    }
+  }
+
   // Great-Niece/Great-Nephew relationships
   // If target's parent is current user's niece/nephew (i.e., target's grandparent is current user's sibling)
   // We need to load the target's grandparents

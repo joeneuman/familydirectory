@@ -49,7 +49,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
+import axios from 'axios';
 import { useSiteSettingsStore } from '../stores/siteSettings';
+import { getApiBaseURL } from '../utils/api.js';
 
 const route = useRoute();
 const siteSettingsStore = useSiteSettingsStore();
