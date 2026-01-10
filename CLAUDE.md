@@ -29,6 +29,26 @@ Modified `backend/src/models/Person.js` to automatically update the `full_name` 
 ✅ Works for heads of household editing household members  
 ✅ Maintains data consistency between `first_name`, `last_name`, and `full_name` fields  
 
+### Testing
+**Test Date:** 2026-01-10
+
+**Test Scenario:**
+- User: Donna Hollingsworth (head of household, non-admin)
+- Target: Kendal Hollingsworth (household member)
+- Change: Modified first name from "Kendal" to "Kendall" to correct spelling
+
+**Test Results:**
+✅ Edit page successfully accepted the name change  
+✅ Person detail view displayed "Kendall Hollingsworth" after save  
+✅ Directory listing displayed "Kendall Hollingsworth"  
+✅ Search function found person with new spelling  
+✅ All views now show consistent, updated name  
+
+**Verification:**
+- Confirmed `full_name` field automatically updated to "Kendall Hollingsworth"
+- Confirmed change persisted across page navigation
+- Confirmed change visible to other users
+
 ### Deployment Notes
 - Backend restart required for changes to take effect
 - No database migration needed
