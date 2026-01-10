@@ -1,0 +1,9 @@
+{
+  "appId": "com.neumanfam.familydirectory",
+  "appName": "Family Directory",
+  "webDir": "dist",
+  "server": {
+    "url": "https://neumanfam.com",
+    "cleartext": true
+  }
+}
