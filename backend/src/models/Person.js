@@ -135,6 +135,13 @@ export class Person {
       throw new Error('Gender must be either "Male" or "Female"');
     }
 
+    // Auto-update full_name if first_name or last_name are being updated
+    if (data.first_name !== undefined || data.last_name !== undefined) {
+      const firstName = data.first_name !== undefined ? data.first_name : currentPerson.first_name;
+      const lastName = data.last_name !== undefined ? data.last_name : currentPerson.last_name;
+      data.full_name = `${firstName} ${lastName}`.trim();
+    }
+
     // Build dynamic update query
     const allowedFields = [
       'first_name', 'last_name', 'full_name', 'email', 'phone',
