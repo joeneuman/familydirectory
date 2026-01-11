@@ -35,6 +35,12 @@ const allowedOrigins = [
   // Explicitly allow HTTPS version of production domain
   'https://neumanfam.com',
   'http://neumanfam.com',
+  // Allow Capacitor mobile app origins
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',
+  /^capacitor:\/\/.+$/,
+  /^ionic:\/\/.+$/,
 ].filter(Boolean);
 
 app.use(cors({

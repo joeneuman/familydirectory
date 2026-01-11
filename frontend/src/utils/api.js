@@ -2,9 +2,12 @@
 // Uses relative path which works with Nginx proxy for both HTTP and HTTPS
 export function getApiBaseURL() {
   const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
   
   // Check if running in Capacitor (mobile app)
-  if (window.Capacitor) {
+  // Capacitor uses capacitor:// or file:// protocol, or window.Capacitor is defined
+  if (window.Capacitor || protocol === 'capacitor:' || protocol === 'file:' || protocol === 'ionic:') {
+    console.log('Capacitor detected - using production API');
     return 'https://neumanfam.com/api';
   }
   
