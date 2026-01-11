@@ -240,7 +240,20 @@ router.get('/verify', async (req, res) => {
       console.log('Detected IP from request:', detectedIp);
     }
     
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${jwtToken}`;
+    // Check if request is from mobile app (Gmail, email client, etc.)
+    const isMobileApp = referer.includes('android-app://') || 
+                       referer.includes('ios-app://') ||
+                       req.get('user-agent')?.includes('Android');
+    
+    let redirectUrl;
+    if (isMobileApp) {
+      // Use custom URL scheme for mobile apps
+      redirectUrl = `familydirectory://auth/callback?token=${jwtToken}`;
+      console.log('Mobile app detected - using custom URL scheme');
+    } else {
+      redirectUrl = `${frontendUrl}/auth/callback?token=${jwtToken}`;
+    }
+    
     console.log('Final Frontend URL:', frontendUrl);
     console.log('Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
