@@ -188,6 +188,7 @@ import { useAuthStore } from './stores/auth';
 import { useSiteSettingsStore } from './stores/siteSettings';
 import axios from 'axios';
 import { getApiBaseURL } from './utils/api.js';
+import { App as CapacitorApp } from '@capacitor/app';
 
 const router = useRouter();
 const route = useRoute();
@@ -324,6 +325,40 @@ onMounted(() => {
       // If token is invalid (403), clear it
       if (error.response?.status === 403) {
         authStore.logout();
+      }
+    });
+  }
+  
+  // Handle deep links for mobile app (magic link authentication)
+  if (window.Capacitor) {
+    CapacitorApp.addListener('appUrlOpen', (data) => {
+      console.log('App opened with URL:', data.url);
+      
+      // Parse the URL to extract the path and query params
+      // URL format: familydirectory://auth/callback?token=...
+      const url = new URL(data.url);
+      const path = url.pathname || url.host; // pathname for familydirectory://path, host for familydirectory://host
+      const token = url.searchParams.get('token');
+      
+      console.log('Deep link path:', path);
+      console.log('Deep link token:', token ? token.substring(0, 20) + '...' : 'none');
+      
+      // If it's the auth callback with a token, handle it
+      if (path.includes('auth/callback') || path === 'auth/callback') {
+        if (token) {
+          console.log('Processing auth token from deep link');
+          authStore.setToken(token);
+          authStore.fetchCurrentUser().then(() => {
+            console.log('User authenticated from deep link');
+            router.push('/directory');
+          }).catch((error) => {
+            console.error('Failed to authenticate from deep link:', error);
+            router.push('/login');
+          });
+        }
+      } else {
+        // Navigate to the path from the deep link
+        router.push(path);
       }
     });
   }
