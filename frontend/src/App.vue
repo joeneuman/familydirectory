@@ -334,31 +334,51 @@ onMounted(() => {
     CapacitorApp.addListener('appUrlOpen', (data) => {
       console.log('App opened with URL:', data.url);
       
-      // Parse the URL to extract the path and query params
-      // URL format: familydirectory://auth/callback?token=...
-      const url = new URL(data.url);
-      const path = url.pathname || url.host; // pathname for familydirectory://path, host for familydirectory://host
-      const token = url.searchParams.get('token');
-      
-      console.log('Deep link path:', path);
-      console.log('Deep link token:', token ? token.substring(0, 20) + '...' : 'none');
-      
-      // If it's the auth callback with a token, handle it
-      if (path.includes('auth/callback') || path === 'auth/callback') {
-        if (token) {
-          console.log('Processing auth token from deep link');
-          authStore.setToken(token);
-          authStore.fetchCurrentUser().then(() => {
-            console.log('User authenticated from deep link');
-            router.push('/directory');
-          }).catch((error) => {
-            console.error('Failed to authenticate from deep link:', error);
-            router.push('/login');
+      // Parse custom URL scheme: familydirectory://auth/callback?token=...
+      // In custom schemes, the host becomes the first path segment
+      try {
+        // Extract everything after the scheme
+        const urlStr = data.url.replace('familydirectory://', '');
+        const [pathPart, queryPart] = urlStr.split('?');
+        
+        console.log('Deep link path part:', pathPart);
+        console.log('Deep link query part:', queryPart);
+        
+        // Parse query params manually
+        const params = {};
+        if (queryPart) {
+          queryPart.split('&').forEach(pair => {
+            const [key, value] = pair.split('=');
+            params[key] = decodeURIComponent(value);
           });
         }
-      } else {
-        // Navigate to the path from the deep link
-        router.push(path);
+        
+        const token = params.token;
+        console.log('Deep link token:', token ? token.substring(0, 20) + '...' : 'none');
+        
+        // If it's the auth callback with a token, handle it
+        if (pathPart.includes('auth/callback')) {
+          if (token) {
+            console.log('Processing auth token from deep link');
+            authStore.setToken(token);
+            authStore.fetchCurrentUser().then(() => {
+              console.log('User authenticated from deep link');
+              router.push('/directory');
+            }).catch((error) => {
+              console.error('Failed to authenticate from deep link:', error);
+              router.push('/login');
+            });
+          } else {
+            console.error('No token in auth callback URL');
+            router.push('/login');
+          }
+        } else {
+          // Navigate to the path from the deep link
+          router.push('/' + pathPart);
+        }
+      } catch (error) {
+        console.error('Error parsing deep link:', error);
+        router.push('/directory');
       }
     });
   }
