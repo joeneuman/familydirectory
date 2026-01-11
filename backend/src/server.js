@@ -45,8 +45,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Log the origin for debugging
+    console.log('CORS request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('No origin - allowing request');
+      return callback(null, true);
+    }
     
     // Check if origin matches any allowed pattern
     const isAllowed = allowedOrigins.some(allowed => {
@@ -59,8 +65,11 @@ app.use(cors({
     });
     
     if (isAllowed) {
+      console.log('Origin allowed:', origin);
       callback(null, true);
     } else {
+      console.log('Origin BLOCKED:', origin);
+      console.log('Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
