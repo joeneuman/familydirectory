@@ -39,6 +39,7 @@ const allowedOrigins = [
   'capacitor://localhost',
   'ionic://localhost',
   'http://localhost',
+  'https://localhost',
   /^capacitor:\/\/.+$/,
   /^ionic:\/\/.+$/,
 ].filter(Boolean);
