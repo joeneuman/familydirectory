@@ -3,6 +3,11 @@
 export function getApiBaseURL() {
   const hostname = window.location.hostname;
   
+  // Check if running in Capacitor (mobile app)
+  if (window.Capacitor) {
+    return 'https://neumanfam.com/api';
+  }
+  
   // For localhost (development), use the backend port directly
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3001/api';
@@ -58,6 +63,11 @@ export function getPhotoURL(photoUrl, personId = null) {
   if (photoUrl.startsWith('/uploads/')) {
     const hostname = window.location.hostname;
     
+    // Check if running in Capacitor (mobile app)
+    if (window.Capacitor) {
+      return `https://neumanfam.com${photoUrl}`;
+    }
+    
     // For localhost (development), use the backend port directly
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return `http://localhost:3001${photoUrl}`;
@@ -70,6 +80,12 @@ export function getPhotoURL(photoUrl, personId = null) {
   
   // Fallback: assume it's a relative path
   const hostname = window.location.hostname;
+  
+  // Check if running in Capacitor (mobile app)
+  if (window.Capacitor) {
+    return `https://neumanfam.com${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`;
+  }
+  
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return `http://localhost:3001${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`;
   }
